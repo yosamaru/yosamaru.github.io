@@ -35,7 +35,7 @@ favicon:
   #ms_browserconfig: /images/browserconfig.xml
 
 # Set default keywords (Use a comma to separate)
-keywords: "Hexo, NexT"
+keywords: "NOW"
 
 # Set rss to false to disable feed link.
 # Leave rss as empty to use site's feed link.
@@ -97,7 +97,7 @@ menu:
   categories: /categories || th
   archives: /archives || archive
   about: /about || user
-#schedule: /schedule || calendar
+  schedule: /schedule || calendar
 #sitemap: /sitemap.xml || sitemap
 #commonweal: /404/ || heartbeat
 
@@ -133,7 +133,7 @@ scheme: Pisces
 # Value after `||` delimeter is the name of FontAwesome icon. If icon (with or without delimeter) is not specified, globe icon will be loaded.
 #侧边栏社交栏
 social:
-  GitHub: https://github.com/oaking-K || github
+  GitHub: https://github.com/yosamaru || github
   E-Mail: mailto:leiw0168@gmail.com || envelope
   #Google: https://plus.google.com/yourname || google
   #Twitter: https://twitter.com/yourname || twitter
