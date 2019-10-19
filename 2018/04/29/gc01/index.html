@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="CMS,Serial,ParNew,Parallel,Scavenge,Serial Old,Parallel Old,G1,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="武夫人" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
+<meta name="keywords" content="CMS,Serial,ParNew,Parallel,Scavenge,Serial Old,Parallel Old,G1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM垃圾收集（一）">
+<meta property="og:url" content="http://yoursite.com/2018/04/29/gc01/index.html">
+<meta property="og:site_name" content="武夫人">
+<meta property="og:description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/heap.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/newObj.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/gccollector.png">
+<meta property="og:updated_time" content="2019-10-19T04:41:42.556Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM垃圾收集（一）">
+<meta name="twitter:description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
+<meta name="twitter:image" content="http://yoursite.com/2018/04/29/gc01/heap.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"left"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/04/29/gc01/">
+
+
+
+
+
+  <title>JVM垃圾收集（一） | 武夫人</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">武夫人</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">L.Wang Blogs</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/29/gc01/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="L.Wang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="武夫人">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM垃圾收集（一）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-29T18:12:02+08:00">
+                2018-04-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/JVM/" itemprop="url" rel="index">
+                    <span itemprop="name">JVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>&emsp;&emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）<a id="more"></a>  </p>
+</blockquote>
+<h5 id="如何判断对象存活"><a href="#如何判断对象存活" class="headerlink" title="如何判断对象存活"></a>如何判断对象存活</h5><table>
+<thead>
+<tr>
+<th style="text-align:center">算法</th>
+<th style="text-align:center">思想</th>
+<th style="text-align:center">优缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">引用计数算法</td>
+<td style="text-align:center">给对象一个计数器，有人引用就加1,引用失效就减1。当计数器为0时，则对象不再被引用。</td>
+<td style="text-align:center">优点：实现简单，判定效率高。缺点：很难解决对象之间相互循环调用的问题</td>
+</tr>
+<tr>
+<td style="text-align:center">可达性分析算法</td>
+<td style="text-align:center">以GC Roots为起点，当一个对象没有以GC Roots为起点的引用链时，则对象不再被引用</td>
+<td style="text-align:center"></td>
+</tr>
+</tbody>
+</table>
+<p>在jdk中引用分为强引用、软引用、弱引用、虚引用。  </p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">强引用</th>
+<th style="text-align:center">软引用</th>
+<th style="text-align:center">弱引用</th>
+<th style="text-align:center">虚引用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">强引用只要存在，就不会被回收</td>
+<td style="text-align:center">在系统将要发生内存溢出时，对象将进入二次垃圾回收范围</td>
+<td style="text-align:center">只能生存到下一次垃圾回收之前</td>
+<td style="text-align:center">惟一的目的就是能在这个对像被收集器回收时收到一个系统的通知</td>
+</tr>
+</tbody>
+</table>
+<h5 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h5><blockquote>
+<p>&emsp;&emsp;在JVM中，可以把堆分为1/3的新生代和2/3的老生代。在将新生代按照8:2分为Eden区和Survivor区。而在Survivor区有按照1:1分为两个，记为from，to区。(各参数依据默认参数)<br><img src="/2018/04/29/gc01/heap.png" alt="&#39;堆的内存结构&#39;"><br>在新创建一个对象时，首先要对一个对象进行判断，是大对象还是一般的对象（需要占用连续的内存空间：如较长的字符串数组）。如果是大对象就会直接进入老年代，否则一般的对象都会进入Eden区。如下图所示：<br><img src="/2018/04/29/gc01/newObj.png" alt="&#39;对象建立的过程&#39;"><br>而对于垃圾收集器的选择具体如下图所示：<br><img src="/2018/04/29/gc01/gccollector.png" alt="&#39;垃圾收集器的组合&#39;"><br>我们需要针对不同的场合选择垃圾收集器。  </p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Serial</th>
+<th style="text-align:center">ParNew</th>
+<th style="text-align:center">Parallel Scavenge</th>
+<th style="text-align:center">Serial Old</th>
+<th style="text-align:center">Parallel Old</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">单线程的收集器，只会使用一个CPU或一条收集器去完成垃圾收集工作，并在在它进行垃圾收集时，必须暂停其他所有工作的线程</td>
+<td style="text-align:center">Serial收集器的多线程版本，也同样要暂停其他工作线程。只有它能与CMS收集器配合。</td>
+<td style="text-align:center">CMS等收集器注重缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge是达到一个可控制的吞吐量。主要适合在后台运算而不需要太多交互的任务</td>
+<td style="text-align:center">单线程收集器，使用标记-整理算法。主要用来和JDK1.5及以前的版本中与Parallel Scavenge配合使用和作为CMS收集器的后备预案，在并发收集器发生Concurrent Mode Failure时使用</td>
+<td style="text-align:center">使用了多线程和标记-整理算法，在注重吞吐量以及CPU资源敏感的场合优先考虑Parallel Scavenge和Parallel Old收集器</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>CMS(Currernt Mark Sweep)<br>CMS收集器采用“标记-清除”算法，从而达到以获取最短回收停顿时间的目标。它分为4个步骤：  <ul>
+<li>初始标记<br>标记GC Roots能直接关联到的对象，速度很快。</li>
+<li>并发标记<br>进行GC Roots Tracing的过程。</li>
+<li>重新标记<br>为了修正并发标记时间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，</li>
+<li>并发清除<br>并发清除GC Roots不可达的对象。<br>优点：并发收集，低停顿。<br>缺点：1、CMS收集线对CPU资源非常敏感。<br>&emsp;&emsp;&emsp;2、CMS收集器无法处理浮动的垃圾，可能出现“Concurrent Mode Failure”失败而导致另一次Full GC的产生。当出现Concurrent Mode Failure失败时，虚拟机将启动后备预案：临时启用Serial Old收集器来重新进行老年代的垃圾收集，停顿的时间会加长。<br>&emsp;&emsp;&emsp;3、“标记-清除”会产生大量的空间碎片。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CMS/" rel="tag"># CMS</a>
+          
+            <a href="/tags/Serial/" rel="tag"># Serial</a>
+          
+            <a href="/tags/ParNew/" rel="tag"># ParNew</a>
+          
+            <a href="/tags/Parallel/" rel="tag"># Parallel</a>
+          
+            <a href="/tags/Scavenge/" rel="tag"># Scavenge</a>
+          
+            <a href="/tags/Serial-Old/" rel="tag"># Serial Old</a>
+          
+            <a href="/tags/Parallel-Old/" rel="tag"># Parallel Old</a>
+          
+            <a href="/tags/G1/" rel="tag"># G1</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">L.Wang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yosamaru" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:leiw0168@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://example.com/" title="Title" target="_blank">Title</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#如何判断对象存活"><span class="nav-number">1.</span> <span class="nav-text">如何判断对象存活</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对象的创建"><span class="nav-number">2.</span> <span class="nav-text">对象的创建</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">L.Wang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
