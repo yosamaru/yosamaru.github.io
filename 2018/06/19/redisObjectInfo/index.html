@@ -81,19 +81,19 @@
 
 
 
-<meta name="description" content="首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？    #####Redis对象 &amp;emsp;&amp;emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和pt">
+<meta name="description" content="&amp;gt;&amp;emsp;&amp;emsp;首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
 <meta name="keywords" content="redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis数据对象初识">
 <meta property="og:url" content="http://yoursite.com/2018/06/19/redisObjectInfo/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？    #####Redis对象 &amp;emsp;&amp;emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和pt">
+<meta property="og:description" content="&amp;gt;&amp;emsp;&amp;emsp;首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2018/06/19/redisObjectInfo/redis对象.png">
-<meta property="og:updated_time" content="2019-10-29T10:07:00.690Z">
+<meta property="og:updated_time" content="2019-10-29T10:10:38.604Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis数据对象初识">
-<meta name="twitter:description" content="首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？    #####Redis对象 &amp;emsp;&amp;emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和pt">
+<meta name="twitter:description" content="&amp;gt;&amp;emsp;&amp;emsp;首先带着这几个问题：  redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
 <meta name="twitter:image" content="http://yoursite.com/2018/06/19/redisObjectInfo/redis对象.png">
 
 
@@ -344,17 +344,16 @@
       
 
       
-        <p>首先带着这几个问题：</p>
+        <p>>&emsp;&emsp;首先带着这几个问题：</p>
 <ol>
 <li><p>redis有哪些对象？</p>
 </li>
 <li><p>redis对象底层的数据结构是什么？</p>
 </li>
-<li><p>为什么要选择这种数据结构？ </p>
+<li><p>为什么要选择这种数据结构？ <a id="more"></a></p>
 </li>
 </ol>
-<p>#####Redis对象</p>
-<p>&emsp;&emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和ptr属性。</p>
+<h5 id="Redis对象"><a href="#Redis对象" class="headerlink" title="Redis对象"></a>Redis对象</h5><p>&emsp;&emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和ptr属性。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line">	// 类型</span><br><span class="line">	unsinged type:4;</span><br><span class="line">	// 编码</span><br><span class="line">	unsinged encoding:4;</span><br><span class="line">	// 指向底层实现数据结构的指针</span><br><span class="line">	void *ptr;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>&emsp;&emsp;Redis的对象有字符串（String），列表（List），集合（Set），哈希（Hash），有序集合（ZSet）这几种对象。</p>
 <ul>
@@ -512,8 +511,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -610,6 +618,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#Redis对象"><span class="nav-number">1.</span> <span class="nav-text">Redis对象</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
