@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-29T10:11:53.314Z</updated>
+  <updated>2019-11-25T12:31:31.381Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -17,11 +17,50 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Redis事件机制</title>
+    <link href="http://yoursite.com/2019/11/25/redisEvent1/"/>
+    <id>http://yoursite.com/2019/11/25/redisEvent1/</id>
+    <published>2019-11-25T02:05:23.000Z</published>
+    <updated>2019-11-25T12:31:31.381Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。<a id="more"></a>  </p></blockquote><h3 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h3><p>Redis基于Reactor模式开发了自己的网络时间处理器：这个处理器被称为文件事件处理器。</p><p>文件事件处理器使用I/O多路复用程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的时间处理器。</p><p>当被监听的套接字准备好执行连结应答（accept）读取（read）写入（write）关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</p><p><img src="/2019/11/25/redisEvent1/FileEvent.png" alt="&#39;文件事件处理器的四个组成部分&#39;"></p><p>尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都放到一个队列里面，然后通过这个队列，以有序、同步、每次一个套接字的方式向文件事件分派器传送套接字。</p><p>文件事件分派器接受I/O多路复用程序传来的套接字，并根据套接字产生的事件的类型，调用相应的事件处理器。</p><h3 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h3><p>Redis的时间事件分为以下两类：</p><p>定时事件：让一段程序在指定的时间之后执行一次。<br>周期事件：让一段程序每隔指定时间就执行一次。</p><p>服务器将所有时间事件都放在一个无序链表中，每当时间事件执行器运行时，它就遍历整个链表，查找所有已到达的时间事件，并调用相应的事件处理器。</p><p><img src="/2019/11/25/redisEvent1/Event.png" alt="事件处理角度下的服务器运行流程"></p><p>时间事件的运用实例：serverCron函数，它的主要工作包括：</p><ol><li>更新服务器的各类统计信息，比如：时间、内存占用、数据库占用情况等。</li><li>清理数据库中的过期键值对。</li><li>关闭清理连接失效的客户端。</li><li>尝试进行AOF或RDB之久化操作。</li><li>如果服务器是主服务器，对从服务器进行定期同步。</li><li>如果处于集群模式，对集群进行定期同步和连接测试。</li></ol><p>文件事件和时间事件是合作关系，服务器会轮流处理这两种事件，并且处理事件的过程中不会进行抢占。</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。&lt;/p&gt;&lt;/blockquote&gt;
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://yoursite.com/tags/Redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Redis数据结构初识</title>
+    <link href="http://yoursite.com/2019/10/29/redisObject2/"/>
+    <id>http://yoursite.com/2019/10/29/redisObject2/</id>
+    <published>2019-10-29T10:18:28.000Z</published>
+    <updated>2019-11-14T04:26:10.715Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://yoursite.com/tags/Redis/"/>
+    
+      <category term="数据结构" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Redis数据对象初识</title>
     <link href="http://yoursite.com/2018/06/19/redisObjectInfo/"/>
     <id>http://yoursite.com/2018/06/19/redisObjectInfo/</id>
     <published>2018-06-19T09:31:43.000Z</published>
-    <updated>2019-10-29T10:11:53.314Z</updated>
+    <updated>2019-10-29T10:17:07.205Z</updated>
     
     <content type="html"><![CDATA[<blockquote><p>&emsp;&emsp;首先带着这几个问题：</p></blockquote><ol><li><p>redis有哪些对象？</p></li><li><p>redis对象底层的数据结构是什么？</p></li><li><p>为什么要选择这种数据结构？ <a id="more"></a></p></li></ol><h5 id="Redis对象"><a href="#Redis对象" class="headerlink" title="Redis对象"></a>Redis对象</h5><p>&emsp;&emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和ptr属性。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line">// 类型</span><br><span class="line">unsinged type:4;</span><br><span class="line">// 编码</span><br><span class="line">unsinged encoding:4;</span><br><span class="line">// 指向底层实现数据结构的指针</span><br><span class="line">void *ptr;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>&emsp;&emsp;Redis的对象有字符串（String），列表（List），集合（Set），哈希（Hash），有序集合（ZSet）这几种对象。</p><ul><li>字符串对象 </li></ul><ol><li>字符串对象的编码可以是int、raw或者embStr。 </li><li>对于int编码的字符串对象来说，如果我们执行了一些命令，使得这个对象保存的不再是整数值，而是一个字符串值，那么字符串对象的编码将从int变为raw。 </li><li>对embStr编码的字符串对象执行任何修改命令时，程序会先将对象的编码从embStr转换成raw，然后在执行命令。所以，embStr编码的字符串对象在执行修改命令之后，总会变成一个raw编码的字符串对象。 </li></ol><ul><li>列表对象 </li></ul><ol><li><p>列表对象的编码可以是ziplist或者linkedlist。 </p></li><li><p>ziplist编码的列表对象使用压缩列表作为底层实现，每个压缩列表节点保存一个列表元素。 </p></li><li><p>linkedlist编码的列表对象使用双端链表作为底层实现，每个双端链表节点都保存了一个字符串对象，而每个字符串对象都保存了一个列表元素。 </p></li><li><p>编码转换 </p><p>&emsp;&emsp;当列表对象可以同时满足以下两个条件时，列表对象使用ziplist编码：列表对象保存的所有字符串元素的长度都小于64字节；列表对象保存的元素数量小于512个；不能满足这两个条件的列表对象需要使用linkedlist编码。 </p></li></ol><ul><li>哈希对象 </li></ul><ol><li><p>哈希对象的编码可以是ziplist或者hashtable。 </p></li><li><p>ziplist 编码的哈希对象使用压缩列表作为底层实现，每当有新的键值对要加入到哈希对象时，程序会先将保存了键的压缩列表节点推入到压缩列表表尾，所以保存了同一键值对的两个节点总是紧挨在一起，保存键的节点在前，保存值的节点在后；先添加到哈希对象中的键值对会放在压缩列表的表头方向，而后来添加到哈希对象中的键值对会被放在压缩列表的表尾方向。 </p></li><li><p>hashtable编码的哈希对象使用字典作为底层实现，哈希对象中的每个键值对都使用一个字典值来保存：字典的每个键都是一个字符串对象，对象中保存了键值对的键。字典中的每一个值都是一个字符串对象，对象中保存了键值对的值。 </p></li><li><p>编码转换 </p><p>&emsp;&emsp;当哈希对象可以同时满足以下两个条件时，列表对象使用ziplist编码：哈希对象保存的所有字符串元素的长度都小于64字节；哈希对象保存的元素数量小于512个；不能满足这两个条件的哈希对象需要使用hashtable编码。 </p></li></ol><ul><li>集合对象 </li></ul><ol><li><p>集合对象的编码可以是inset或者hashtable。 </p></li><li><p>inset编码的集合对象使用整数集合作为底层实现，集合对象包含的所有元素都被保存在整数集合里面 </p></li><li><p>hashtable编码的集合对象使用字典作为底层实现，字典的每个键都是一个字符串对象，每个字符串对象包含了一个集合元素，字典的值则全部被设置为null。 </p></li><li><p>编码的转换 </p><p>&emsp;&emsp;当集合对象可以同时满足以下两个条件时，对象使用insert编码：集合对象保存的所有元素都是整数值,集合对象保存的元素数量小于512个；不能满足这两个条件的哈希对象需要使用hashtable编码。 </p></li></ol><ul><li><p>有序集合对象 </p><p>&emsp;&emsp;有序集合的编码可以是ziplist或者skiplist。 </p><ol><li><p>ziplist编码的有序集合对象使用压缩列表作为底层实现，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员（member），而第二个元素则保存元素的分值（score）。压缩列表内的集合元素按分值从小到大进行排序，分值较小的元素被放置在靠近表头的位置，而分值较大的元素则被放置在靠近表尾的位置。 </p></li><li><p>skiplist编码的有序集合对象使用zset结构作为底层实现，一个zset结构同时包含一个字典和一个跳跃表。zset结构中的zs1跳跃表按分值从小到大保存了所有集合元素，每个跳跃表节点都保存了一个集合元素：跳跃表节点的object属性保存了元素的成员，而跳跃表节点的score属性则保存了元素的分值。 </p></li><li><p>编码转换 </p><p>&emsp;&emsp;当有序集合对象可以同时满足以下两个条件时，对象可以使用ziplist编码：有序集合对象保存的元素数量小于128个；有序集合对象保存的所有元素成员的长度都小于64字节；不能满足这两个条件的列表对象需要使用skiplist编码。 </p><p><img src="/2018/06/19/redisObjectInfo/redis对象.png" alt="&#39;Redis对象&#39;"></p></li></ol></li></ul>]]></content>
     
@@ -49,7 +88,7 @@
     <link href="http://yoursite.com/2018/04/29/gc01/"/>
     <id>http://yoursite.com/2018/04/29/gc01/</id>
     <published>2018-04-29T10:12:02.000Z</published>
-    <updated>2019-10-19T04:41:42.556Z</updated>
+    <updated>2019-10-29T10:17:07.204Z</updated>
     
     <content type="html"><![CDATA[<blockquote><p>&emsp;&emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）<a id="more"></a>  </p></blockquote><h5 id="如何判断对象存活"><a href="#如何判断对象存活" class="headerlink" title="如何判断对象存活"></a>如何判断对象存活</h5><table><thead><tr><th style="text-align:center">算法</th><th style="text-align:center">思想</th><th style="text-align:center">优缺点</th></tr></thead><tbody><tr><td style="text-align:center">引用计数算法</td><td style="text-align:center">给对象一个计数器，有人引用就加1,引用失效就减1。当计数器为0时，则对象不再被引用。</td><td style="text-align:center">优点：实现简单，判定效率高。缺点：很难解决对象之间相互循环调用的问题</td></tr><tr><td style="text-align:center">可达性分析算法</td><td style="text-align:center">以GC Roots为起点，当一个对象没有以GC Roots为起点的引用链时，则对象不再被引用</td><td style="text-align:center"></td></tr></tbody></table><p>在jdk中引用分为强引用、软引用、弱引用、虚引用。  </p><table><thead><tr><th style="text-align:center">强引用</th><th style="text-align:center">软引用</th><th style="text-align:center">弱引用</th><th style="text-align:center">虚引用</th></tr></thead><tbody><tr><td style="text-align:center">强引用只要存在，就不会被回收</td><td style="text-align:center">在系统将要发生内存溢出时，对象将进入二次垃圾回收范围</td><td style="text-align:center">只能生存到下一次垃圾回收之前</td><td style="text-align:center">惟一的目的就是能在这个对像被收集器回收时收到一个系统的通知</td></tr></tbody></table><h5 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h5><blockquote><p>&emsp;&emsp;在JVM中，可以把堆分为1/3的新生代和2/3的老生代。在将新生代按照8:2分为Eden区和Survivor区。而在Survivor区有按照1:1分为两个，记为from，to区。(各参数依据默认参数)<br><img src="/2018/04/29/gc01/heap.png" alt="&#39;堆的内存结构&#39;"><br>在新创建一个对象时，首先要对一个对象进行判断，是大对象还是一般的对象（需要占用连续的内存空间：如较长的字符串数组）。如果是大对象就会直接进入老年代，否则一般的对象都会进入Eden区。如下图所示：<br><img src="/2018/04/29/gc01/newObj.png" alt="&#39;对象建立的过程&#39;"><br>而对于垃圾收集器的选择具体如下图所示：<br><img src="/2018/04/29/gc01/gccollector.png" alt="&#39;垃圾收集器的组合&#39;"><br>我们需要针对不同的场合选择垃圾收集器。  </p></blockquote><table><thead><tr><th style="text-align:center">Serial</th><th style="text-align:center">ParNew</th><th style="text-align:center">Parallel Scavenge</th><th style="text-align:center">Serial Old</th><th style="text-align:center">Parallel Old</th></tr></thead><tbody><tr><td style="text-align:center">单线程的收集器，只会使用一个CPU或一条收集器去完成垃圾收集工作，并在在它进行垃圾收集时，必须暂停其他所有工作的线程</td><td style="text-align:center">Serial收集器的多线程版本，也同样要暂停其他工作线程。只有它能与CMS收集器配合。</td><td style="text-align:center">CMS等收集器注重缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge是达到一个可控制的吞吐量。主要适合在后台运算而不需要太多交互的任务</td><td style="text-align:center">单线程收集器，使用标记-整理算法。主要用来和JDK1.5及以前的版本中与Parallel Scavenge配合使用和作为CMS收集器的后备预案，在并发收集器发生Concurrent Mode Failure时使用</td><td style="text-align:center">使用了多线程和标记-整理算法，在注重吞吐量以及CPU资源敏感的场合优先考虑Parallel Scavenge和Parallel Old收集器</td></tr></tbody></table><ul><li>CMS(Currernt Mark Sweep)<br>CMS收集器采用“标记-清除”算法，从而达到以获取最短回收停顿时间的目标。它分为4个步骤：  <ul><li>初始标记<br>标记GC Roots能直接关联到的对象，速度很快。</li><li>并发标记<br>进行GC Roots Tracing的过程。</li><li>重新标记<br>为了修正并发标记时间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，</li><li>并发清除<br>并发清除GC Roots不可达的对象。<br>优点：并发收集，低停顿。<br>缺点：1、CMS收集线对CPU资源非常敏感。<br>&emsp;&emsp;&emsp;2、CMS收集器无法处理浮动的垃圾，可能出现“Concurrent Mode Failure”失败而导致另一次Full GC的产生。当出现Concurrent Mode Failure失败时，虚拟机将启动后备预案：临时启用Serial Old收集器来重新进行老年代的垃圾收集，停顿的时间会加长。<br>&emsp;&emsp;&emsp;3、“标记-清除”会产生大量的空间碎片。</li></ul></li></ul>]]></content>
     
