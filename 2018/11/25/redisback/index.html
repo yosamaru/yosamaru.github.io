@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="redis,">
+  <meta name="keywords" content="Redis,">
 
 
 
@@ -81,20 +81,21 @@
 
 
 
-<meta name="description" content="&amp;emsp;&amp;emsp;首先带着这几个问题：   redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
-<meta name="keywords" content="redis">
+<meta name="description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
+<meta name="keywords" content="Redis">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Redis数据对象初识">
-<meta property="og:url" content="http://yoursite.com/2018/06/19/redisObjectInfo/index.html">
+<meta property="og:title" content="Redis持久化">
+<meta property="og:url" content="http://yoursite.com/2018/11/25/redisback/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="&amp;emsp;&amp;emsp;首先带着这几个问题：   redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
+<meta property="og:description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/06/19/redisObjectInfo/redis对象.png">
-<meta property="og:updated_time" content="2019-11-25T12:36:04.695Z">
+<meta property="og:image" content="http://yoursite.com/2018/11/25/redisback/repository.png">
+<meta property="og:image" content="http://yoursite.com/2018/11/25/redisback/aof01.png">
+<meta property="og:updated_time" content="2019-11-27T05:56:50.528Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis数据对象初识">
-<meta name="twitter:description" content="&amp;emsp;&amp;emsp;首先带着这几个问题：   redis有哪些对象？  redis对象底层的数据结构是什么？  为什么要选择这种数据结构？">
-<meta name="twitter:image" content="http://yoursite.com/2018/06/19/redisObjectInfo/redis对象.png">
+<meta name="twitter:title" content="Redis持久化">
+<meta name="twitter:description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
+<meta name="twitter:image" content="http://yoursite.com/2018/11/25/redisback/repository.png">
 
 
 
@@ -124,13 +125,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/06/19/redisObjectInfo/">
+  <link rel="canonical" href="http://yoursite.com/2018/11/25/redisback/">
 
 
 
 
 
-  <title>Redis数据对象初识 | 武夫人</title>
+  <title>Redis持久化 | 武夫人</title>
   
 
 
@@ -277,7 +278,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/19/redisObjectInfo/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/25/redisback/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="L.Wang">
@@ -294,7 +295,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Redis数据对象初识</h1>
+          <h1 class="post-title" itemprop="name headline">Redis持久化</h1>
         
 
         <div class="post-meta">
@@ -306,8 +307,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-19T17:31:43+08:00">
-                2018-06-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-25T21:03:31+08:00">
+                2018-11-25
               </time>
             
 
@@ -345,84 +346,41 @@
 
       
         <blockquote>
-<p>&emsp;&emsp;首先带着这几个问题：</p>
+<p>Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。<a id="more"></a> </p>
 </blockquote>
+<h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><h4 id="RDB文件的创建与加载"><a href="#RDB文件的创建与加载" class="headerlink" title="RDB文件的创建与加载"></a>RDB文件的创建与加载</h4><p>&emsp;&emsp;有两个Redis命令可用于生成RDB文件，一个SAVE，另一个事BGSAVE。</p>
+<p>&emsp;&emsp;SAVE命令会<font color="red">阻塞</font>Redis服务器进程。直到RDB文件创建完成为止，<font color="red">在服务器进程阻塞期间，服务器不能处理任何命令请求</font>。</p>
+<p>&emsp;&emsp;BGSAVE命令会派生一个<font color="red">子进程</font>，然后由子进程负责创建RDB文件，<font color="red">服务器进行（父进程）继续处理命令请求</font>。</p>
+<p>&emsp;&emsp;RDB文件的载入工作是在服务器启动时自动执行的，所以无论是SAVE、BGSAVE生成的RDB文件，载入的方式都是一致的。<font color="red">只要RDB服务器在启动时检测到RDB文件存在，它就会自动载入RDB文件。</font></p>
+<p>&emsp;&emsp;因为AOF文件的更新频率通常比RDB文件的更新的频率高，所以:</p>
 <ol>
-<li><p>redis有哪些对象？</p>
-</li>
-<li><p>redis对象底层的数据结构是什么？</p>
-</li>
-<li><p>为什么要选择这种数据结构？ <a id="more"></a></p>
-</li>
+<li>如果服务器开启了AOF持久化功能，那么服务器会优先使用AOF文件来还原数据库状态。</li>
+<li>只有在AOF持久化功能处于关闭状态时，服务器才使用RDB文件来还原数据库状态。</li>
 </ol>
-<h5 id="Redis对象"><a href="#Redis对象" class="headerlink" title="Redis对象"></a>Redis对象</h5><p>&emsp;&emsp;Redis每创建一个键值对时，至少会创建两个对象，一个对象用作键值对的键，一个用作键值对的值。每一个对象都由一个redisObject结构表示，结构中和保存数据有关的数据有三个属性分别是type属性、encoding属性和ptr属性。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line">	// 类型</span><br><span class="line">	unsinged type:4;</span><br><span class="line">	// 编码</span><br><span class="line">	unsinged encoding:4;</span><br><span class="line">	// 指向底层实现数据结构的指针</span><br><span class="line">	void *ptr;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;Redis的对象有字符串（String），列表（List），集合（Set），哈希（Hash），有序集合（ZSet）这几种对象。</p>
-<ul>
-<li>字符串对象 </li>
-</ul>
+<p>&emsp;&emsp;服务器禁止SAVE命令和BGSAVE命令同时执行是为了父进程（服务器进程）和子进程同时执行两个rdbSave调用，防止发生竞争。其次，在BGSAVE命令执行期间，客户端发送的BGSAVE命令会被服务器拒绝，因为同时执行两个BGSAVE也会产生竞争条件。</p>
+<p>&emsp;&emsp;因为BGSAVE命令可以不阻塞服务器进程的情况下执行，所以Redis允许用户通过设置服务器配置的save选项，让服务器每个一段时间自动执行一次BGSAVE命令。</p>
+<h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><p>AOF持久化的功能可以分为命令追加（append）、文件写入、文件同步（sync）三个步骤。</p>
+<h4 id="AOF文件的创建"><a href="#AOF文件的创建" class="headerlink" title="AOF文件的创建"></a>AOF文件的创建</h4><h5 id="命令追加"><a href="#命令追加" class="headerlink" title="命令追加"></a>命令追加</h5><p>&emsp;&emsp;当AOF持久化功能处于打开状态时，服务器在执行完一个写入命令之后，会以协议格式将被执行的写命令追加到服务器状态的aof buf缓冲区的末尾。</p>
+<h5 id="AOF的文件写入"><a href="#AOF的文件写入" class="headerlink" title="AOF的文件写入"></a>AOF的文件写入</h5><p>&emsp;&emsp;Redis的服务器进程就是一个事件循环。因为服务器在处理文件事件时可能会执行写命令，使得一些内容被追加到aof_buf缓冲区里面，所以在服务器每次结束一个事件循环之前，它都会调用flushAppendOnlyFile函数，考虑是否需要将aof_buf缓冲区中的内容写入和保存到aof文件里面。</p>
+<h5 id="AOF的文件同步"><a href="#AOF的文件同步" class="headerlink" title="AOF的文件同步"></a>AOF的文件同步</h5><p>&emsp;&emsp;为了提高文件的写入效率，在现代操作系统中，当用户调用writer函数，将一些数据写入到文件的时候，操作系统通常会将写入数据暂时保存在一个内存缓冲区里面，等到缓冲区的空间被填满，或者超过了指定的时限之后，才真正地将缓冲区中的数据写入到磁盘里面。</p>
+<p>&emsp;&emsp;为此，系统提供了fsync和fdatasync两个同步函数，它们可以强制让操作系统立即将缓冲区中的数据写入到硬盘里面，从而确保写入数据的安全性。</p>
+<h4 id="AOF文件载入与数据还原"><a href="#AOF文件载入与数据还原" class="headerlink" title="AOF文件载入与数据还原"></a>AOF文件载入与数据还原</h4><p><img src="/2018/11/25/redisback/repository.png" alt="文件载入过程"></p>
+<h4 id="AOF重写"><a href="#AOF重写" class="headerlink" title="AOF重写"></a>AOF重写</h4><p>&emsp;&emsp;为了解决AOF文件体积膨胀的问题，Redis提供了AOF文件重写（rewrite）功能。通过该功能，Redis服务器可以创建一个新的AOF文件来替代现有的AOF文件，新旧两个AOF文件所保存的数据库状态相同，但新AOF文件不包含任何浪费空间的冗余命令，所以新AOF文件的体积通常会比AOF文件的体积要小的多。</p>
+<p>&emsp;&emsp;虽然Redis将生成新AOF文件替换旧AOF文件的功能命名为“AOF文件重写”，但实际上，AOF重写并不需要对现有的AOF文件进行任何读取、分析、或着写入操作，这个功能是通过读取服务器当前的数据库状态来实现的。</p>
+<p>&emsp;&emsp;首先从数据库中读取键现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令，这就是AOF重写功能的实现。（<font color="red">先读后写</font>）</p>
+<p><img src="/2018/11/25/redisback/aof01.png" alt="服务器同时将命令发送给AOF文件和AOF重写缓冲区"></p>
+<p>&emsp;&emsp;Redis不希望AOF重写造成服务器无法处理请求，所以Redis决定将AOF重写程序放到子进程里执行，可以同时达到两个目的：</p>
 <ol>
-<li>字符串对象的编码可以是int、raw或者embStr。 </li>
-<li>对于int编码的字符串对象来说，如果我们执行了一些命令，使得这个对象保存的不再是整数值，而是一个字符串值，那么字符串对象的编码将从int变为raw。 </li>
-<li>对embStr编码的字符串对象执行任何修改命令时，程序会先将对象的编码从embStr转换成raw，然后在执行命令。所以，embStr编码的字符串对象在执行修改命令之后，总会变成一个raw编码的字符串对象。 </li>
+<li>子进程进行AOF重写期间，服务器进行（父进程）可以处理命令请求。</li>
+<li>子进程带有服务器进程的数据副本，使用子进程而不是线程，可以在避免使用锁的情况下，保证数据的安全性。</li>
 </ol>
-<ul>
-<li>列表对象 </li>
-</ul>
+<h5 id="AOF重写过程中数据不一致的问题解决"><a href="#AOF重写过程中数据不一致的问题解决" class="headerlink" title="AOF重写过程中数据不一致的问题解决"></a>AOF重写过程中数据不一致的问题解决</h5><p>&emsp;&emsp;为了解决这种数据不一致问题，Redis服务器设置了一个AOF重写缓冲区，这个缓冲区在服务器创建子进程之后开始使用，当Redis服务器执行了一个写命令之后，它会同时将这个写命令发送给AOF缓冲区和AOF重写缓冲区。</p>
+<p>当子进程完成AOF重写工作之后，它会向父进程发送一个信号，父进程在接到该信号之后，会调用一个信号处理函数，并执行以下工作：</p>
 <ol>
-<li><p>列表对象的编码可以是ziplist或者linkedlist。 </p>
-</li>
-<li><p>ziplist编码的列表对象使用压缩列表作为底层实现，每个压缩列表节点保存一个列表元素。 </p>
-</li>
-<li><p>linkedlist编码的列表对象使用双端链表作为底层实现，每个双端链表节点都保存了一个字符串对象，而每个字符串对象都保存了一个列表元素。 </p>
-</li>
-<li><p>编码转换 </p>
-<p>&emsp;&emsp;当列表对象可以同时满足以下两个条件时，列表对象使用ziplist编码：列表对象保存的所有字符串元素的长度都小于64字节；列表对象保存的元素数量小于512个；不能满足这两个条件的列表对象需要使用linkedlist编码。 </p>
-</li>
+<li>将AOF重写缓冲区中的所有内容写入到新AOF文件汇总，这是新AOF文件所保存的数据库将和服务器当前的数据库状态一致。</li>
+<li>对新的AOF文件进行改名，原子地覆盖现有的AOF文件，完成新旧两个AOF文件的替换。</li>
 </ol>
-<ul>
-<li>哈希对象 </li>
-</ul>
-<ol>
-<li><p>哈希对象的编码可以是ziplist或者hashtable。 </p>
-</li>
-<li><p>ziplist 编码的哈希对象使用压缩列表作为底层实现，每当有新的键值对要加入到哈希对象时，程序会先将保存了键的压缩列表节点推入到压缩列表表尾，所以保存了同一键值对的两个节点总是紧挨在一起，保存键的节点在前，保存值的节点在后；先添加到哈希对象中的键值对会放在压缩列表的表头方向，而后来添加到哈希对象中的键值对会被放在压缩列表的表尾方向。 </p>
-</li>
-<li><p>hashtable编码的哈希对象使用字典作为底层实现，哈希对象中的每个键值对都使用一个字典值来保存：字典的每个键都是一个字符串对象，对象中保存了键值对的键。字典中的每一个值都是一个字符串对象，对象中保存了键值对的值。 </p>
-</li>
-<li><p>编码转换 </p>
-<p>&emsp;&emsp;当哈希对象可以同时满足以下两个条件时，列表对象使用ziplist编码：哈希对象保存的所有字符串元素的长度都小于64字节；哈希对象保存的元素数量小于512个；不能满足这两个条件的哈希对象需要使用hashtable编码。 </p>
-</li>
-</ol>
-<ul>
-<li>集合对象 </li>
-</ul>
-<ol>
-<li><p>集合对象的编码可以是inset或者hashtable。 </p>
-</li>
-<li><p>inset编码的集合对象使用整数集合作为底层实现，集合对象包含的所有元素都被保存在整数集合里面 </p>
-</li>
-<li><p>hashtable编码的集合对象使用字典作为底层实现，字典的每个键都是一个字符串对象，每个字符串对象包含了一个集合元素，字典的值则全部被设置为null。 </p>
-</li>
-<li><p>编码的转换 </p>
-<p>&emsp;&emsp;当集合对象可以同时满足以下两个条件时，对象使用insert编码：集合对象保存的所有元素都是整数值,集合对象保存的元素数量小于512个；不能满足这两个条件的哈希对象需要使用hashtable编码。 </p>
-</li>
-</ol>
-<ul>
-<li><p>有序集合对象 </p>
-<p>&emsp;&emsp;有序集合的编码可以是ziplist或者skiplist。 </p>
-<ol>
-<li><p>ziplist编码的有序集合对象使用压缩列表作为底层实现，每个集合元素使用两个紧挨在一起的压缩列表节点来保存，第一个节点保存元素的成员（member），而第二个元素则保存元素的分值（score）。压缩列表内的集合元素按分值从小到大进行排序，分值较小的元素被放置在靠近表头的位置，而分值较大的元素则被放置在靠近表尾的位置。 </p>
-</li>
-<li><p>skiplist编码的有序集合对象使用zset结构作为底层实现，一个zset结构同时包含一个字典和一个跳跃表。zset结构中的zs1跳跃表按分值从小到大保存了所有集合元素，每个跳跃表节点都保存了一个集合元素：跳跃表节点的object属性保存了元素的成员，而跳跃表节点的score属性则保存了元素的分值。 </p>
-</li>
-<li><p>编码转换 </p>
-<p>&emsp;&emsp;当有序集合对象可以同时满足以下两个条件时，对象可以使用ziplist编码：有序集合对象保存的元素数量小于128个；有序集合对象保存的所有元素成员的长度都小于64字节；不能满足这两个条件的列表对象需要使用skiplist编码。 </p>
-<p><img src="/2018/06/19/redisObjectInfo/redis对象.png" alt="&#39;Redis对象&#39;"></p>
-</li>
-</ol>
-</li>
-</ul>
+<p>&emsp;&emsp;在整个AOF后台重写过程中，只有信号处理函数执行时会对服务器进程（父进程）造成阻塞，其余时间，AOF后台重写都不会阻塞父进程。</p>
 
       
     </div>
@@ -440,7 +398,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/redis/" rel="tag"># redis</a>
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
           
         </div>
       
@@ -453,8 +411,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/04/29/gc01/" rel="next" title="JVM垃圾收集（一）">
-                <i class="fa fa-chevron-left"></i> JVM垃圾收集（一）
+              <a href="/2018/06/19/redisObjectInfo/" rel="next" title="Redis数据对象初识">
+                <i class="fa fa-chevron-left"></i> Redis数据对象初识
               </a>
             
           </div>
@@ -463,8 +421,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/11/25/redisback/" rel="prev" title="Redis持久化">
-                Redis持久化 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/04/25/redisEvent1/" rel="prev" title="Redis事件机制">
+                Redis事件机制 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -634,7 +592,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#Redis对象"><span class="nav-number">1.</span> <span class="nav-text">Redis对象</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB持久化"><span class="nav-number">1.</span> <span class="nav-text">RDB持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RDB文件的创建与加载"><span class="nav-number">1.1.</span> <span class="nav-text">RDB文件的创建与加载</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF持久化"><span class="nav-number">2.</span> <span class="nav-text">AOF持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF文件的创建"><span class="nav-number">2.1.</span> <span class="nav-text">AOF文件的创建</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#命令追加"><span class="nav-number">2.1.1.</span> <span class="nav-text">命令追加</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF的文件写入"><span class="nav-number">2.1.2.</span> <span class="nav-text">AOF的文件写入</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF的文件同步"><span class="nav-number">2.1.3.</span> <span class="nav-text">AOF的文件同步</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF文件载入与数据还原"><span class="nav-number">2.2.</span> <span class="nav-text">AOF文件载入与数据还原</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF重写"><span class="nav-number">2.3.</span> <span class="nav-text">AOF重写</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF重写过程中数据不一致的问题解决"><span class="nav-number">2.3.1.</span> <span class="nav-text">AOF重写过程中数据不一致的问题解决</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
