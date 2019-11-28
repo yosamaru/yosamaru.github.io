@@ -59,6 +59,27 @@
   </entry>
   
   <entry>
+    <title>RocketMQ结构初识</title>
+    <link href="http://yoursite.com/2018/07/28/rocketmq1/"/>
+    <id>http://yoursite.com/2018/07/28/rocketmq1/</id>
+    <published>2018-07-28T10:44:25.000Z</published>
+    <updated>2019-11-28T11:09:00.126Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构<a id="more"></a></p></blockquote><p>&emsp;&emsp;Broker消息服务器在启动时间向所有NameServer注册，消息生产者（Producer）在发送消息之前<font color="red">先从NameServer获取Broker服务器地址列表</font>，然后根据<font color="red">负载算法</font>从列表中选择一台消息服务器进行消息发送。NameServer与每台Broker服务器保持<font color="red">长连接</font>，并间隔10s检测Broker是否存活，<font color="red">如果检测到Broker宕机，则从路由器中将其移除</font>。</p><p><img src="/2018/07/28/rocketmq1/rocketmq01.png" alt="RokcetMQ物理部署图"></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构&lt;/p&gt;&lt;/blockquote&gt;
+    
+    </summary>
+    
+    
+      <category term="RocketMQ" scheme="http://yoursite.com/tags/RocketMQ/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Redis数据对象初识</title>
     <link href="http://yoursite.com/2018/06/19/redisObjectInfo/"/>
     <id>http://yoursite.com/2018/06/19/redisObjectInfo/</id>
