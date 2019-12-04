@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="CMS,Serial,ParNew,Parallel,Scavenge,Serial Old,Parallel Old,G1,">
+  <meta name="keywords" content="SpringBoot,">
 
 
 
@@ -81,22 +81,18 @@
 
 
 
-<meta name="description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
-<meta name="keywords" content="CMS,Serial,ParNew,Parallel,Scavenge,Serial Old,Parallel Old,G1">
+<meta name="description" content="平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。">
+<meta name="keywords" content="SpringBoot">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JVM垃圾收集（一）">
-<meta property="og:url" content="http://yoursite.com/2018/04/29/gc01/index.html">
+<meta property="og:title" content="SpringBoot是如何进行自动配置的？">
+<meta property="og:url" content="http://yoursite.com/2019/12/04/springboot01/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
+<meta property="og:description" content="平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/heap.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/newObj.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/29/gc01/gccollector.png">
-<meta property="og:updated_time" content="2019-11-25T12:36:04.694Z">
+<meta property="og:updated_time" content="2019-12-04T12:37:08.993Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JVM垃圾收集（一）">
-<meta name="twitter:description" content="&amp;emsp;&amp;emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）">
-<meta name="twitter:image" content="http://yoursite.com/2018/04/29/gc01/heap.png">
+<meta name="twitter:title" content="SpringBoot是如何进行自动配置的？">
+<meta name="twitter:description" content="平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。">
 
 
 
@@ -126,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/04/29/gc01/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/04/springboot01/">
 
 
 
 
 
-  <title>JVM垃圾收集（一） | 武夫人</title>
+  <title>SpringBoot是如何进行自动配置的？ | 武夫人</title>
   
 
 
@@ -279,7 +275,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/29/gc01/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/04/springboot01/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="L.Wang">
@@ -296,7 +292,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">JVM垃圾收集（一）</h1>
+          <h1 class="post-title" itemprop="name headline">SpringBoot是如何进行自动配置的？</h1>
         
 
         <div class="post-meta">
@@ -308,8 +304,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-29T18:12:02+08:00">
-                2018-04-29
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-04T16:20:19+08:00">
+                2019-12-04
               </time>
             
 
@@ -318,28 +314,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/JVM/" itemprop="url" rel="index">
-                    <span itemprop="name">JVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -369,80 +343,51 @@
 
       
         <blockquote>
-<p>&emsp;&emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）<a id="more"></a>  </p>
+<p>平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。<a id="more"></a></p>
 </blockquote>
-<h5 id="如何判断对象存活"><a href="#如何判断对象存活" class="headerlink" title="如何判断对象存活"></a>如何判断对象存活</h5><table>
+<p>&emsp;&emsp;因为公司向对dubbo进行升级，解决dubbo优雅停机等bug问题，借着这个机会，升级改造项目使用SpringBoot。</p>
+<h4 id="常用注解"><a href="#常用注解" class="headerlink" title="常用注解"></a>常用注解</h4><table>
 <thead>
 <tr>
-<th style="text-align:center">算法</th>
-<th style="text-align:center">思想</th>
-<th style="text-align:center">优缺点</th>
+<th>注解</th>
+<th>作用</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center">引用计数算法</td>
-<td style="text-align:center">给对象一个计数器，有人引用就加1,引用失效就减1。当计数器为0时，则对象不再被引用。</td>
-<td style="text-align:center">优点：实现简单，判定效率高。缺点：很难解决对象之间相互循环调用的问题</td>
+<td>@Value</td>
+<td>@Value 就相当于传统 xml 配置文件中的 value 字段。</td>
 </tr>
 <tr>
-<td style="text-align:center">可达性分析算法</td>
-<td style="text-align:center">以GC Roots为起点，当一个对象没有以GC Roots为起点的引用链时，则对象不再被引用</td>
-<td style="text-align:center"></td>
+<td>@ConfigurationProperties</td>
+<td>对标记有@ConfigurationProperties的类所有属性和配置文件中相关的配置项进行绑定。（默认从全局配置文件中获取配置值），绑定之后我们就可以通过这个类去访问全局配置文件中的属性值了。</td>
+</tr>
+<tr>
+<td>@Import</td>
+<td>@Import注解支持导入普通Java类，并将其声明成一个bean。主要用于将对各分散的java config配置类融合成一个更大的config类。</td>
+</tr>
+<tr>
+<td>@Conditional</td>
+<td>@Conditional注释可以实现只有在特定条件满足时才启用一些配置。</td>
 </tr>
 </tbody>
 </table>
-<p>在jdk中引用分为强引用、软引用、弱引用、虚引用。  </p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">强引用</th>
-<th style="text-align:center">软引用</th>
-<th style="text-align:center">弱引用</th>
-<th style="text-align:center">虚引用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">强引用只要存在，就不会被回收</td>
-<td style="text-align:center">在系统将要发生内存溢出时，对象将进入二次垃圾回收范围</td>
-<td style="text-align:center">只能生存到下一次垃圾回收之前</td>
-<td style="text-align:center">惟一的目的就是能在这个对像被收集器回收时收到一个系统的通知</td>
-</tr>
-</tbody>
-</table>
-<h5 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h5><blockquote>
-<p>&emsp;&emsp;在JVM中，可以把堆分为1/3的新生代和2/3的老生代。在将新生代按照8:2分为Eden区和Survivor区。而在Survivor区有按照1:1分为两个，记为from，to区。(各参数依据默认参数)<br><img src="/2018/04/29/gc01/heap.png" alt="&#39;堆的内存结构&#39;"><br>在新创建一个对象时，首先要对一个对象进行判断，是大对象还是一般的对象（需要占用连续的内存空间：如较长的字符串数组）。如果是大对象就会直接进入老年代，否则一般的对象都会进入Eden区。如下图所示：<br><img src="/2018/04/29/gc01/newObj.png" alt="&#39;对象建立的过程&#39;"><br>而对于垃圾收集器的选择具体如下图所示：<br><img src="/2018/04/29/gc01/gccollector.png" alt="&#39;垃圾收集器的组合&#39;"><br>我们需要针对不同的场合选择垃圾收集器。  </p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Serial</th>
-<th style="text-align:center">ParNew</th>
-<th style="text-align:center">Parallel Scavenge</th>
-<th style="text-align:center">Serial Old</th>
-<th style="text-align:center">Parallel Old</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">单线程的收集器，只会使用一个CPU或一条收集器去完成垃圾收集工作，并在在它进行垃圾收集时，必须暂停其他所有工作的线程</td>
-<td style="text-align:center">Serial收集器的多线程版本，也同样要暂停其他工作线程。只有它能与CMS收集器配合。</td>
-<td style="text-align:center">CMS等收集器注重缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge是达到一个可控制的吞吐量。主要适合在后台运算而不需要太多交互的任务</td>
-<td style="text-align:center">单线程收集器，使用标记-整理算法。主要用来和JDK1.5及以前的版本中与Parallel Scavenge配合使用和作为CMS收集器的后备预案，在并发收集器发生Concurrent Mode Failure时使用</td>
-<td style="text-align:center">使用了多线程和标记-整理算法，在注重吞吐量以及CPU资源敏感的场合优先考虑Parallel Scavenge和Parallel Old收集器</td>
-</tr>
-</tbody>
-</table>
+<h4 id="SpringBoot自动配置原理"><a href="#SpringBoot自动配置原理" class="headerlink" title="SpringBoot自动配置原理"></a>SpringBoot自动配置原理</h4><p>&emsp;&emsp;SpringBoot的自动配置源头一切都要从@SpringBootApplication这个注解开始说起。</p>
+<p>@SpringBootApplication 标注在某个类上说明：</p>
 <ul>
-<li>CMS(Currernt Mark Sweep)<br>CMS收集器采用“标记-清除”算法，从而达到以获取最短回收停顿时间的目标。它分为4个步骤：  <ul>
-<li>初始标记<br>标记GC Roots能直接关联到的对象，速度很快。</li>
-<li>并发标记<br>进行GC Roots Tracing的过程。</li>
-<li>重新标记<br>为了修正并发标记时间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，</li>
-<li>并发清除<br>并发清除GC Roots不可达的对象。<br>优点：并发收集，低停顿。<br>缺点：1、CMS收集线对CPU资源非常敏感。<br>&emsp;&emsp;&emsp;2、CMS收集器无法处理浮动的垃圾，可能出现“Concurrent Mode Failure”失败而导致另一次Full GC的产生。当出现Concurrent Mode Failure失败时，虚拟机将启动后备预案：临时启用Serial Old收集器来重新进行老年代的垃圾收集，停顿的时间会加长。<br>&emsp;&emsp;&emsp;3、“标记-清除”会产生大量的空间碎片。</li>
+<li>这个类是 SpringBoot 的主配置类。</li>
+<li>SpringBoot 就应该运行这个类的 main 方法来启动 SpringBoot 应用。</li>
 </ul>
-</li>
-</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@SpringBootConfiguration</span></span><br><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(excludeFilters = &#123; <span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),</span><br><span class="line">		<span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) &#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SpringBootApplication &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;通过源码可知，@SpringBootApplication是一个组合注解，由三个注解组成：</p>
+<p>@SpringBootConfiguration：该注解表示这是一个SpringBoot的配置类，其实就是一个Configuration注解而已。</p>
+<p>@EnableAutoConfiguration：开启自动配置。</p>
+<p>@ComponentScan：开启组件扫描。</p>
+<p>在查看下开启自动配置的的注解类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@AutoConfigurationPackage</span></span><br><span class="line"><span class="meta">@Import</span>(AutoConfigurationImportSelector.class)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> EnableAutoConfiguration &#123;</span><br><span class="line"></span><br><span class="line">	String ENABLED_OVERRIDE_PROPERTY = <span class="string">"spring.boot.enableautoconfiguration"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration classes such that they will never be applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the classes to exclude</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	Class&lt;?&gt;[] exclude() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration class names such that they will never be</span></span><br><span class="line"><span class="comment">	 * applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the class names to exclude</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@since</span> 1.3.0</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	String[] excludeName() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>@EnableAutoConfiguration注解由@AutoConfigurationPackage和@Import两个注解组成。</p>
+<p>@AutoConfigurationPackage：由@Import(AutoConfigurationPackages.Registrar.class)可知，其注解主要是将主配置类（@SpringBootConfiguration标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器中。</p>
+<p>@Import自动导入了AutoConfigurationImportSelector.class配置类。</p>
 
       
     </div>
@@ -460,21 +405,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/CMS/" rel="tag"># CMS</a>
-          
-            <a href="/tags/Serial/" rel="tag"># Serial</a>
-          
-            <a href="/tags/ParNew/" rel="tag"># ParNew</a>
-          
-            <a href="/tags/Parallel/" rel="tag"># Parallel</a>
-          
-            <a href="/tags/Scavenge/" rel="tag"># Scavenge</a>
-          
-            <a href="/tags/Serial-Old/" rel="tag"># Serial Old</a>
-          
-            <a href="/tags/Parallel-Old/" rel="tag"># Parallel Old</a>
-          
-            <a href="/tags/G1/" rel="tag"># G1</a>
+            <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
           
         </div>
       
@@ -487,15 +418,15 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2019/06/03/work01/" rel="next" title="记一次服务启动时失败的问题">
+                <i class="fa fa-chevron-left"></i> 记一次服务启动时失败的问题
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/06/19/redisObjectInfo/" rel="prev" title="Redis数据对象初识">
-                Redis数据对象初识 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -664,7 +595,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#如何判断对象存活"><span class="nav-number">1.</span> <span class="nav-text">如何判断对象存活</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对象的创建"><span class="nav-number">2.</span> <span class="nav-text">对象的创建</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#常用注解"><span class="nav-number">1.</span> <span class="nav-text">常用注解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SpringBoot自动配置原理"><span class="nav-number">2.</span> <span class="nav-text">SpringBoot自动配置原理</span></a></li></ol></div>
             
 
           </div>
