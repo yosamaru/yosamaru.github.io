@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="RocketMQ,">
+  <meta name="keywords" content="Redis,Cache,">
 
 
 
@@ -81,20 +81,18 @@
 
 
 
-<meta name="description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
-<meta name="keywords" content="RocketMQ">
+<meta name="description" content="记录一次线上account服务第一次启动时，有效访问阻塞，启动失败的问题。">
+<meta name="keywords" content="Redis,Cache">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RocketMQ结构初识">
-<meta property="og:url" content="http://yoursite.com/2018/07/28/rocketmq1/index.html">
+<meta property="og:title" content="记一次服务启动时失败的问题">
+<meta property="og:url" content="http://yoursite.com/2019/06/03/work01/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
+<meta property="og:description" content="记录一次线上account服务第一次启动时，有效访问阻塞，启动失败的问题。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/07/28/rocketmq1/rocketmq01.png">
-<meta property="og:updated_time" content="2019-11-28T11:09:00.126Z">
+<meta property="og:updated_time" content="2019-12-04T03:05:42.203Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="RocketMQ结构初识">
-<meta name="twitter:description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
-<meta name="twitter:image" content="http://yoursite.com/2018/07/28/rocketmq1/rocketmq01.png">
+<meta name="twitter:title" content="记一次服务启动时失败的问题">
+<meta name="twitter:description" content="记录一次线上account服务第一次启动时，有效访问阻塞，启动失败的问题。">
 
 
 
@@ -124,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/07/28/rocketmq1/">
+  <link rel="canonical" href="http://yoursite.com/2019/06/03/work01/">
 
 
 
 
 
-  <title>RocketMQ结构初识 | 武夫人</title>
+  <title>记一次服务启动时失败的问题 | 武夫人</title>
   
 
 
@@ -277,7 +275,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/28/rocketmq1/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/03/work01/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="L.Wang">
@@ -294,7 +292,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">RocketMQ结构初识</h1>
+          <h1 class="post-title" itemprop="name headline">记一次服务启动时失败的问题</h1>
         
 
         <div class="post-meta">
@@ -306,8 +304,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-28T18:44:25+08:00">
-                2018-07-28
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-03T22:23:47+08:00">
+                2019-06-03
               </time>
             
 
@@ -345,10 +343,20 @@
 
       
         <blockquote>
-<p>要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构<a id="more"></a></p>
+<p>记录一次线上account服务第一次启动时，有效访问阻塞，启动失败的问题。<a id="more"></a></p>
 </blockquote>
-<p>&emsp;&emsp;Broker消息服务器在启动时间向所有NameServer注册，消息生产者（Producer）在发送消息之前<font color="red">先从NameServer获取Broker服务器地址列表</font>，然后根据<font color="red">负载算法</font>从列表中选择一台消息服务器进行消息发送。NameServer与每台Broker服务器保持<font color="red">长连接</font>，并间隔10s检测Broker是否存活，<font color="red">如果检测到Broker宕机，则从路由器中将其移除</font>。</p>
-<p><img src="/2018/07/28/rocketmq1/rocketmq01.png" alt="RokcetMQ物理部署图"></p>
+<h4 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h4><p>&emsp;&emsp;在今天修改了account服务之后，发布到生产之后，发现携程的查询请求全部报错，阻塞在了account服务中。我们就对问题进行了排查。首先，预估有这个原因：</p>
+<ol>
+<li><p>Redis挂了，线程池没有起到作用。</p>
+</li>
+<li><p>在重新发布时，供应商信息没有存放在缓存中。</p>
+</li>
+</ol>
+<h4 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h4><p>&emsp;&emsp;检查代码，发现代码没有问题，查看redis的线程池设计。我们用的redis线程池是用的commons-pool。查看获取对象的方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">public T borrowObject() throws Exception &#123;</span><br><span class="line">        long starttime = System.currentTimeMillis();</span><br><span class="line">        GenericObjectPool.Latch&lt;T&gt; latch = new GenericObjectPool.Latch();</span><br><span class="line">        byte whenExhaustedAction;</span><br><span class="line">        long maxWait;</span><br><span class="line">        synchronized(this) &#123;</span><br><span class="line">            whenExhaustedAction = this._whenExhaustedAction;</span><br><span class="line">            maxWait = this._maxWait;</span><br><span class="line">            this._allocationQueue.add(latch);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        this.allocate();</span><br><span class="line"></span><br><span class="line">        while(true) &#123;</span><br><span class="line">        // 添加同步锁</span><br><span class="line">            synchronized(this) &#123;</span><br><span class="line">                this.assertOpen();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (latch.getPair() == null &amp;&amp; !latch.mayCreate()) &#123;</span><br><span class="line">                switch(whenExhaustedAction) &#123;</span><br><span class="line">                case 0:</span><br><span class="line">                		// 同步锁</span><br><span class="line">                    synchronized(this) &#123;</span><br><span class="line">                        if (latch.getPair() == null &amp;&amp; !latch.mayCreate()) &#123;</span><br><span class="line">                            this._allocationQueue.remove(latch);</span><br><span class="line">                            throw new NoSuchElementException(&quot;Pool exhausted&quot;);</span><br><span class="line">                        &#125;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                case 1:</span><br><span class="line">                    try &#123;</span><br><span class="line">                        synchronized(latch) &#123;</span><br><span class="line">                            if (latch.getPair() != null || latch.mayCreate()) &#123;</span><br><span class="line">                                break;</span><br><span class="line">                            &#125;</span><br><span class="line">                            </span><br><span class="line">                            // 等待时间</span><br><span class="line">                            if (maxWait &lt;= 0L) &#123;</span><br><span class="line">                                latch.wait();</span><br><span class="line">                            &#125; else &#123;</span><br><span class="line">                                long elapsed = System.currentTimeMillis() - starttime;</span><br><span class="line">                                long waitTime = maxWait - elapsed;</span><br><span class="line">                                if (waitTime &gt; 0L) &#123;</span><br><span class="line">                                    latch.wait(waitTime);</span><br><span class="line">                                &#125;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        if (this.isClosed()) &#123;</span><br><span class="line">                            throw new IllegalStateException(&quot;Pool closed&quot;);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; catch (InterruptedException var51) &#123;</span><br><span class="line">            ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>而我们的问题就出现在了这个等待时间的问题上。</p>
+<p>&emsp;&emsp;当account服务重新启动时，redis会从线程池中获取redis连接。而在第一次启动时，<font color="red">redisPool定义的最大资源数、最小空闲资源数时，不会真的把Jedis连接放到连接池里。第一次使用时，没有资源使用，会先创建一个新的链接，然后放到池子里，会有一定的时间开销。</font>而在这一段时间里，携程等OTA的搜索量非常大，要在account服务查询大量的供应商信息，造成堵塞。所以在account服务启动前3分钟时，会造成携程的搜索失败率很高，有时直接account服务启动失败。所以我们考虑<font color="red">要在account服务启动时，先要为redisPool进行预热。</font></p>
+<p>&emsp;&emsp;携程的机票搜索一直调用account服务，但是只是在account服务查询供应商的信息，而这些供应商信息一般都是固定的。所以最后我们决定使用本地缓存。在每一个对外查询接口进行添加本地缓存，同时，为了防止突然修改供应商信息，需要刷新本地缓存，我们修改供应商信息时会通知给zookeeper，一但本地缓存的程序发现供应商信息修改了，会自动刷新本地缓存。</p>
 
       
     </div>
@@ -366,7 +374,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/RocketMQ/" rel="tag"># RocketMQ</a>
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Cache/" rel="tag"># Cache</a>
           
         </div>
       
@@ -379,8 +389,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/06/19/redisObjectInfo/" rel="next" title="Redis数据对象初识">
-                <i class="fa fa-chevron-left"></i> Redis数据对象初识
+              <a href="/2019/04/29/tcc01/" rel="next" title="分布式事务学习">
+                <i class="fa fa-chevron-left"></i> 分布式事务学习
               </a>
             
           </div>
@@ -388,10 +398,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/11/25/redisback/" rel="prev" title="Redis持久化">
-                Redis持久化 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -443,8 +449,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -541,6 +556,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#起因"><span class="nav-number">1.</span> <span class="nav-text">起因</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#问题排查"><span class="nav-number">2.</span> <span class="nav-text">问题排查</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
