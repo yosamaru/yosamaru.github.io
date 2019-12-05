@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="NOW">
+  <meta name="keywords" content="RocketMQ,">
 
 
 
@@ -81,13 +81,20 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="武夫人">
-<meta property="og:url" content="http://yoursite.com/tags/CMS/index.html">
+<meta name="description" content="RocketMQ的事务消息用途广泛，也是很多人消息中间件选择RocketMQ的一个重要原因。">
+<meta name="keywords" content="RocketMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ事务消息知悉">
+<meta property="og:url" content="http://yoursite.com/2018/12/01/rocketmq2/index.html">
 <meta property="og:site_name" content="武夫人">
+<meta property="og:description" content="RocketMQ的事务消息用途广泛，也是很多人消息中间件选择RocketMQ的一个重要原因。">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/12/01/rocketmq2/rocketmq2.png">
+<meta property="og:updated_time" content="2019-12-05T04:01:07.884Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="武夫人">
+<meta name="twitter:title" content="RocketMQ事务消息知悉">
+<meta name="twitter:description" content="RocketMQ的事务消息用途广泛，也是很多人消息中间件选择RocketMQ的一个重要原因。">
+<meta name="twitter:image" content="http://yoursite.com/2018/12/01/rocketmq2/rocketmq2.png">
 
 
 
@@ -117,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/tags/CMS/">
+  <link rel="canonical" href="http://yoursite.com/2018/12/01/rocketmq2/">
 
 
 
 
 
-  <title>标签: CMS | 武夫人</title>
+  <title>RocketMQ事务消息知悉 | 武夫人</title>
   
 
 
@@ -142,7 +149,7 @@
     
   
 
-  <div class="container sidebar-position-left ">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -256,52 +263,174 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block tag">
+  <div id="posts" class="posts-expand">
+    
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h1>CMS<small>标签</small>
-        </h1>
-      </div>
+  
 
-      
-        
+  
+  
+  
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/01/rocketmq2/">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="L.Wang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="武夫人">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2018/04/29/gc01/" itemprop="url">
-              
-                <span itemprop="name">JVM垃圾收集（一）</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">RocketMQ事务消息知悉</h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2018-04-29T18:12:02+08:00" content="2018-04-29">
-          04-29
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-01T22:14:23+08:00">
+                2018-12-01
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>RocketMQ的事务消息用途广泛，也是很多人消息中间件选择RocketMQ的一个重要原因。<a id="more"></a></p>
+</blockquote>
+<h4 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h4><p>RocketMQ的事务消息队列提供类似X/Open XA的分布式事务功能，通过消息队列RocketMQ事务消息能达到分布式事务的最终一致。</p>
+<p>半消息：暂不能投敌的消息，发送方已经将消息成功地发送到了消息队列RocketMQ服务段，但是服务端未收到生产着对该消息的二次确认，此时该消息被标记成“暂不能投递”状态，处于该种状态下的消息即为半消息，</p>
+<p>消息回查：由于网络闪断、生产者应用重启等原因，导致某条事务消息的二次确认丢失，消息队列RocketMQ服务端通过扫描发现某条消息长期处于“半消息”时，需要主动向消息生产者询问该消息的最终状态（Commit或是Rollback），此过程即为消息回查。</p>
+<p><img src="/2018/12/01/rocketmq2/rocketmq2.png" alt="RocketMQ事务流程"></p>
+<ol>
+<li>发送方向消息队列RocketMQ服务端发送消息。</li>
+<li><p>服务端将消息持久化成功后，向发送方ACK确认消息已经发送成功，此时消息为半消息。</p>
+</li>
+<li><p>发送方开始执行本地事务逻辑。</p>
+</li>
+<li>发送方根据本地事务执行结果向服务端提交二次确认（commit或是rollback），服务端收到commit状态</li>
+</ol>
+<p>则将半消息标记为可投递状态，订阅方最终将收到该消息；服务端收到rollback状态，则删除半消息，订阅方将不会收到该消息。</p>
+<ol start="5">
+<li>在断网或者是应用重启的特殊情况下，上述步骤4提交的二次确认没有抵达RocketMQ的服务端，经过固定时间后，服务端将会对消息进行回查。</li>
+<li><p>发送方收到消息回查结果后，需要检查对应消息的本地事务执行的最终结果。</p>
+</li>
+<li><p>发送方根据检查到的本地事务的最终状态再此提交二次确认，服务端仍按照步骤四对半消息进行操作。</p>
+</li>
+</ol>
+<p>在实际操作中需要注意的是事务消息的Group ID不能与其他类型消息的Group ID共用。与其他消息不同的是，事务消息有回查机制，回查时消息队列RocketMQ服务端会根据Group ID去查询客户端。如果是通过 ONSFactory.createTransactionProducer 创建事务消息的 Producer 时必须指定 LocalTransactionChecker 的实现类，处理异常情况下事务消息的回查。</p>
 
       
     </div>
+    
+    
+    
 
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/RocketMQ/" rel="tag"># RocketMQ</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/25/redisback/" rel="next" title="Redis持久化">
+                <i class="fa fa-chevron-left"></i> Redis持久化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/25/redisEvent1/" rel="prev" title="Redis事件机制">
+                Redis事件机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -309,6 +438,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -329,8 +462,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -427,6 +569,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#事务消息"><span class="nav-number">1.</span> <span class="nav-text">事务消息</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -567,6 +725,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
