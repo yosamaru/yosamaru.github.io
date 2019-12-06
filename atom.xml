@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-12-04T13:11:50.370Z</updated>
+  <updated>2019-12-06T04:48:01.544Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>记录面试问题</title>
+    <link href="http://yoursite.com/2019/12/05/interview/"/>
+    <id>http://yoursite.com/2019/12/05/interview/</id>
+    <published>2019-12-05T13:00:43.000Z</published>
+    <updated>2019-12-06T04:48:01.544Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>记录面试问题<a id="more"></a></p></blockquote><h4 id="20191205"><a href="#20191205" class="headerlink" title="20191205"></a>20191205</h4><ol><li><p>@Controller和@RestController注解有什么不同？</p><p> 两者的区分为@RestController为@Controller和@ResponseBody的结合。</p><p>如果只是使用@RestController注解Controller，则Controller中的方法无法返回jsp页面，或者html，<font color="red">配置的视图解析器 InternalResourceViewResolver不起作用，返回的内容就是Return 里的内容。</font></p><p>如果需要返回到指定页面，则需要用 @Controller配合视图解析器InternalResourceViewResolver才行。</p>  <font color="red">如果需要返回JSON，XML或自定义mediaType内容到页面，则需要在对应的方法上加上@ResponseBody注解。</font></li><li><p>@Resource和@Autowired注解的区别？</p><ul><li><p>@Autowired为<font color="red">Spring提供的注解</font>，需要导入包org.springframework.beans.factory.annotation.Autowired;<font color="red">只按照byType注入。</font>@Autowired注解是按照类型（byteType）装配依赖对象，默认情况下，要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false。如果想使用名称（byName），可以结合@Qualiffier注解一起使用。</p></li><li><p>@Resource<font color="red">默认按照ByName自动注入，</font>由J2EE提供，需要导入包javax.annotation.Resource。@Resource有两个重要的属性：name和type，而Spring将@Resource注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，<font color="red">如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略。</font></p></li></ul></li><li><p>CAS问题？</p><ul><li>在CAS方法中，CAS有三个操作数，内存值V，旧的预期值E，要修改的新值U。当且仅当预期值E和内存值V相等时，将内存值V修改为U，否则什么都不做。</li></ul><p>以AtomicInteger为例：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">incrementAndGet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> current = get();</span><br><span class="line">        <span class="keyword">int</span> next = current + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (compareAndSet(current, next))</span><br><span class="line">            <span class="keyword">return</span> next;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><ul><li>ABA问题：如果变量V初次读取的时候是A，并且在准备的赋值的时候检查到仍是A，并不能说明它的值没有被其它线程修改过。如果这段时间曾经修改为B，然后又修改为A，那CAS操作就会误认为它从来没有被修改过。针对这种情况，java并发包中提供了一个带有标记的原子类AtomicStampedReference，它可一通过控制变量的版本来保证CAS的正确性。高并发“查询并修改”的场景，可以用CAS（Compare and Set）的方式解决数据一致性问题。对应到业务，即在set的时候，加上初始条件的比对。</li></ul></li><li><p>AQS中CountDownLatch和CyclicBarrier的区别，分别适用于那些应用场景？</p><ul><li>CyclicBarrier是一个同步辅助类，它允许一组线程相互等待直到到达某个工作屏障点，通过他可以完成多线程之间的相互等待。每个线程都就绪之后才能执行后面的某项操作。和CountDownLatch有相似的地方都是通过计数器来实现的。当某个线程执行了await()方法后就进入等待状态，计数器操作加1，当计数器的值达到预先设定的值后，线程被唤醒，继续执行后续操作。CyclicBarrier是可重用的计数器，CyclicBarrier的使用场景和CountDownLatch很相似，<font color="red">可以用于多线程计算数据最后的总计结果。</font></li><li>CyclicBarrier和CountDownLatch的使用区别:<ol><li>CountDownLatch的计数器只使用一次，CyclicBarrier可以用reset重置。</li><li>CountDownLatch是一个线程等待其他线程完成某个操作之后，才可以继续执行。也就是一个或多个等待其它的关系，而CyclicBarrier是实现了多个线程之间的相互等待，所有线程都满足了条件之后才会执行。</li></ol></li></ul></li><li><p>如何让索引失效？为什么失效？</p><ul><li><p>如果条件中有or，即使其中有条件带索引也不会使用(这也是为什么尽量少用or的原因)</p></li><li><p>对于多列索引，不是使用的第一部分(第一个)，则不会使用索引</p></li><li><p>like查询是以%开头</p></li><li><p>如果列类型是字符串，那一定要在条件中将数据使用引号引用起来,否则不使用索引</p><p>参考：<a href="https://yq.aliyun.com/articles/388463" target="_blank" rel="noopener">https://yq.aliyun.com/articles/388463</a></p></li></ul></li><li><p>forEach中修改循环的对象，为什么回发生ConcurrentModificationException错误？</p><p>foreach的背后实现原理其实就是Iterator（关于Iterator可以看<a href="https://link.jianshu.com?t=http://www.programcreek.com/2013/02/java-design-pattern-iterator/" target="_blank" rel="noopener">Java Design Pattern: Iterator</a>）。在这里，迭代ArrayList的Iterator中有一个变量<code>expectedModCount</code>，该变量会初始化和<code>modCount</code>相等，但如果接下来如果集合进行修改<code>modCount</code>改变，就会造成<code>expectedModCount!=modCount</code>，此时就会抛出java.util.ConcurrentModificationException异常</p></li><li><p>JDK8中CurrentHashMap为什么会放弃使用分段锁？</p><p>段Segment继承了重入锁ReentrantLock，有了锁的功能，每个锁控制的是一段，当每个Segment越来越大时，锁的粒度就变得有些大了。</p><ul><li>分段锁的优势在于保证在操作不同段 map 的时候可以并发执行，操作同段 map 的时候，进行锁的竞争和等待。这相对于直接对整个map同步synchronized是有优势的。</li><li>缺点在于分成很多段时会比较浪费内存空间(不连续，碎片化); 操作map时竞争同一个分段锁的概率非常小时，分段锁反而会造成更新等操作的长时间等待; 当某个段很大时，分段锁的性能会下降。</li><li>为什么不用ReentrantLock而用synchronized ?<ul><li>减少内存开销:如果使用ReentrantLock则需要节点继承AQS来获得同步支持，增加内存开销，而1.8中只有头节点需要进行同步。</li><li>内部优化:synchronized则是JVM直接支持的，JVM能够在运行时作出相应的优化措施：锁粗化、锁消除、锁自旋等等。</li></ul></li></ul></li><li><p>线程的创建方式？</p></li></ol><ol start="9"><li><p>JDK8的ExecutorService和JDK7的 Executor有什么区别？ExecutorService的实现类有哪些？分别都有什么作用？</p><p>参考：<a href="https://yemengying.com/2017/03/17/difference-between-executor-executorService/" target="_blank" rel="noopener">https://yemengying.com/2017/03/17/difference-between-executor-executorService/</a></p></li><li><p>Struts2的多线程和SpringMVC的单线程有什么区别？</p></li><li><p>Mybaits的二级缓存如何开启？二级缓存如何保证与数据库数据的一致性？</p><p>参考：<a href="https://yq.aliyun.com/articles/608941" target="_blank" rel="noopener">https://yq.aliyun.com/articles/608941</a></p></li><li><p>Redis分布式锁应该如何设计？</p><p>参考：<a href="https://juejin.im/entry/5a502ac2518825732b19a595" target="_blank" rel="noopener">https://juejin.im/entry/5a502ac2518825732b19a595</a></p></li><li><p>ReentrantLock的使用？</p><p>参考：<a href="https://juejin.im/post/5aeb0a8b518825673a2066f0" target="_blank" rel="noopener">https://juejin.im/post/5aeb0a8b518825673a2066f0</a></p></li></ol>]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;记录面试问题&lt;/p&gt;&lt;/blockquote&gt;
+    
+    </summary>
+    
+    
+      <category term="Interview" scheme="http://yoursite.com/tags/Interview/"/>
+    
+  </entry>
   
   <entry>
     <title>SpringBoot是如何进行自动配置的？</title>

@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Redis,">
+  <meta name="keywords" content="Interview,">
 
 
 
@@ -81,21 +81,18 @@
 
 
 
-<meta name="description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
-<meta name="keywords" content="Redis">
+<meta name="description" content="记录面试问题">
+<meta name="keywords" content="Interview">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Redis持久化">
-<meta property="og:url" content="http://yoursite.com/2018/11/25/redisback/index.html">
+<meta property="og:title" content="记录面试问题">
+<meta property="og:url" content="http://yoursite.com/2019/12/05/interview/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
+<meta property="og:description" content="记录面试问题">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/11/25/redisback/repository.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/25/redisback/aof01.png">
-<meta property="og:updated_time" content="2019-11-27T05:56:50.528Z">
+<meta property="og:updated_time" content="2019-12-06T04:48:01.544Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis持久化">
-<meta name="twitter:description" content="Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。">
-<meta name="twitter:image" content="http://yoursite.com/2018/11/25/redisback/repository.png">
+<meta name="twitter:title" content="记录面试问题">
+<meta name="twitter:description" content="记录面试问题">
 
 
 
@@ -125,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/11/25/redisback/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/05/interview/">
 
 
 
 
 
-  <title>Redis持久化 | 武夫人</title>
+  <title>记录面试问题 | 武夫人</title>
   
 
 
@@ -278,7 +275,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/25/redisback/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/05/interview/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="L.Wang">
@@ -295,7 +292,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Redis持久化</h1>
+          <h1 class="post-title" itemprop="name headline">记录面试问题</h1>
         
 
         <div class="post-meta">
@@ -307,8 +304,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-25T21:03:31+08:00">
-                2018-11-25
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-05T21:00:43+08:00">
+                2019-12-05
               </time>
             
 
@@ -346,41 +343,90 @@
 
       
         <blockquote>
-<p>Redis的持久话方式分为AOF(Append Of File)和RDB两种方式。<a id="more"></a> </p>
+<p>记录面试问题<a id="more"></a></p>
 </blockquote>
-<h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><h4 id="RDB文件的创建与加载"><a href="#RDB文件的创建与加载" class="headerlink" title="RDB文件的创建与加载"></a>RDB文件的创建与加载</h4><p>&emsp;&emsp;有两个Redis命令可用于生成RDB文件，一个SAVE，另一个事BGSAVE。</p>
-<p>&emsp;&emsp;SAVE命令会<font color="red">阻塞</font>Redis服务器进程。直到RDB文件创建完成为止，<font color="red">在服务器进程阻塞期间，服务器不能处理任何命令请求</font>。</p>
-<p>&emsp;&emsp;BGSAVE命令会派生一个<font color="red">子进程</font>，然后由子进程负责创建RDB文件，<font color="red">服务器进行（父进程）继续处理命令请求</font>。</p>
-<p>&emsp;&emsp;RDB文件的载入工作是在服务器启动时自动执行的，所以无论是SAVE、BGSAVE生成的RDB文件，载入的方式都是一致的。<font color="red">只要RDB服务器在启动时检测到RDB文件存在，它就会自动载入RDB文件。</font></p>
-<p>&emsp;&emsp;因为AOF文件的更新频率通常比RDB文件的更新的频率高，所以:</p>
-<ol>
-<li>如果服务器开启了AOF持久化功能，那么服务器会优先使用AOF文件来还原数据库状态。</li>
-<li>只有在AOF持久化功能处于关闭状态时，服务器才使用RDB文件来还原数据库状态。</li>
+<h4 id="20191205"><a href="#20191205" class="headerlink" title="20191205"></a>20191205</h4><ol>
+<li><p>@Controller和@RestController注解有什么不同？</p>
+<p> 两者的区分为@RestController为@Controller和@ResponseBody的结合。</p>
+<p>如果只是使用@RestController注解Controller，则Controller中的方法无法返回jsp页面，或者html，<font color="red">配置的视图解析器 InternalResourceViewResolver不起作用，返回的内容就是Return 里的内容。</font></p>
+<p>如果需要返回到指定页面，则需要用 @Controller配合视图解析器InternalResourceViewResolver才行。</p>
+  <font color="red">如果需要返回JSON，XML或自定义mediaType内容到页面，则需要在对应的方法上加上@ResponseBody注解。</font>
+</li>
+<li><p>@Resource和@Autowired注解的区别？</p>
+<ul>
+<li><p>@Autowired为<font color="red">Spring提供的注解</font>，需要导入包org.springframework.beans.factory.annotation.Autowired;<font color="red">只按照byType注入。</font>@Autowired注解是按照类型（byteType）装配依赖对象，默认情况下，要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false。如果想使用名称（byName），可以结合@Qualiffier注解一起使用。</p>
+</li>
+<li><p>@Resource<font color="red">默认按照ByName自动注入，</font>由J2EE提供，需要导入包javax.annotation.Resource。@Resource有两个重要的属性：name和type，而Spring将@Resource注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，<font color="red">如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略。</font></p>
+</li>
+</ul>
+</li>
+<li><p>CAS问题？</p>
+<ul>
+<li>在CAS方法中，CAS有三个操作数，内存值V，旧的预期值E，要修改的新值U。当且仅当预期值E和内存值V相等时，将内存值V修改为U，否则什么都不做。</li>
+</ul>
+<p>以AtomicInteger为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">incrementAndGet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> current = get();</span><br><span class="line">        <span class="keyword">int</span> next = current + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (compareAndSet(current, next))</span><br><span class="line">            <span class="keyword">return</span> next;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>ABA问题：如果变量V初次读取的时候是A，并且在准备的赋值的时候检查到仍是A，并不能说明它的值没有被其它线程修改过。如果这段时间曾经修改为B，然后又修改为A，那CAS操作就会误认为它从来没有被修改过。针对这种情况，java并发包中提供了一个带有标记的原子类AtomicStampedReference，它可一通过控制变量的版本来保证CAS的正确性。高并发“查询并修改”的场景，可以用CAS（Compare and Set）的方式解决数据一致性问题。对应到业务，即在set的时候，加上初始条件的比对。</li>
+</ul>
+</li>
+<li><p>AQS中CountDownLatch和CyclicBarrier的区别，分别适用于那些应用场景？</p>
+<ul>
+<li>CyclicBarrier是一个同步辅助类，它允许一组线程相互等待直到到达某个工作屏障点，通过他可以完成多线程之间的相互等待。每个线程都就绪之后才能执行后面的某项操作。和CountDownLatch有相似的地方都是通过计数器来实现的。当某个线程执行了await()方法后就进入等待状态，计数器操作加1，当计数器的值达到预先设定的值后，线程被唤醒，继续执行后续操作。CyclicBarrier是可重用的计数器，CyclicBarrier的使用场景和CountDownLatch很相似，<font color="red">可以用于多线程计算数据最后的总计结果。</font></li>
+<li>CyclicBarrier和CountDownLatch的使用区别:<ol>
+<li>CountDownLatch的计数器只使用一次，CyclicBarrier可以用reset重置。</li>
+<li>CountDownLatch是一个线程等待其他线程完成某个操作之后，才可以继续执行。也就是一个或多个等待其它的关系，而CyclicBarrier是实现了多个线程之间的相互等待，所有线程都满足了条件之后才会执行。</li>
 </ol>
-<p>&emsp;&emsp;服务器禁止SAVE命令和BGSAVE命令同时执行是为了父进程（服务器进程）和子进程同时执行两个rdbSave调用，防止发生竞争。其次，在BGSAVE命令执行期间，客户端发送的BGSAVE命令会被服务器拒绝，因为同时执行两个BGSAVE也会产生竞争条件。</p>
-<p>&emsp;&emsp;因为BGSAVE命令可以不阻塞服务器进程的情况下执行，所以Redis允许用户通过设置服务器配置的save选项，让服务器每个一段时间自动执行一次BGSAVE命令。</p>
-<h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><p>AOF持久化的功能可以分为命令追加（append）、文件写入、文件同步（sync）三个步骤。</p>
-<h4 id="AOF文件的创建"><a href="#AOF文件的创建" class="headerlink" title="AOF文件的创建"></a>AOF文件的创建</h4><h5 id="命令追加"><a href="#命令追加" class="headerlink" title="命令追加"></a>命令追加</h5><p>&emsp;&emsp;当AOF持久化功能处于打开状态时，服务器在执行完一个写入命令之后，会以协议格式将被执行的写命令追加到服务器状态的aof buf缓冲区的末尾。</p>
-<h5 id="AOF的文件写入"><a href="#AOF的文件写入" class="headerlink" title="AOF的文件写入"></a>AOF的文件写入</h5><p>&emsp;&emsp;Redis的服务器进程就是一个事件循环。因为服务器在处理文件事件时可能会执行写命令，使得一些内容被追加到aof_buf缓冲区里面，所以在服务器每次结束一个事件循环之前，它都会调用flushAppendOnlyFile函数，考虑是否需要将aof_buf缓冲区中的内容写入和保存到aof文件里面。</p>
-<h5 id="AOF的文件同步"><a href="#AOF的文件同步" class="headerlink" title="AOF的文件同步"></a>AOF的文件同步</h5><p>&emsp;&emsp;为了提高文件的写入效率，在现代操作系统中，当用户调用writer函数，将一些数据写入到文件的时候，操作系统通常会将写入数据暂时保存在一个内存缓冲区里面，等到缓冲区的空间被填满，或者超过了指定的时限之后，才真正地将缓冲区中的数据写入到磁盘里面。</p>
-<p>&emsp;&emsp;为此，系统提供了fsync和fdatasync两个同步函数，它们可以强制让操作系统立即将缓冲区中的数据写入到硬盘里面，从而确保写入数据的安全性。</p>
-<h4 id="AOF文件载入与数据还原"><a href="#AOF文件载入与数据还原" class="headerlink" title="AOF文件载入与数据还原"></a>AOF文件载入与数据还原</h4><p><img src="/2018/11/25/redisback/repository.png" alt="文件载入过程"></p>
-<h4 id="AOF重写"><a href="#AOF重写" class="headerlink" title="AOF重写"></a>AOF重写</h4><p>&emsp;&emsp;为了解决AOF文件体积膨胀的问题，Redis提供了AOF文件重写（rewrite）功能。通过该功能，Redis服务器可以创建一个新的AOF文件来替代现有的AOF文件，新旧两个AOF文件所保存的数据库状态相同，但新AOF文件不包含任何浪费空间的冗余命令，所以新AOF文件的体积通常会比AOF文件的体积要小的多。</p>
-<p>&emsp;&emsp;虽然Redis将生成新AOF文件替换旧AOF文件的功能命名为“AOF文件重写”，但实际上，AOF重写并不需要对现有的AOF文件进行任何读取、分析、或着写入操作，这个功能是通过读取服务器当前的数据库状态来实现的。</p>
-<p>&emsp;&emsp;首先从数据库中读取键现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令，这就是AOF重写功能的实现。（<font color="red">先读后写</font>）</p>
-<p><img src="/2018/11/25/redisback/aof01.png" alt="服务器同时将命令发送给AOF文件和AOF重写缓冲区"></p>
-<p>&emsp;&emsp;Redis不希望AOF重写造成服务器无法处理请求，所以Redis决定将AOF重写程序放到子进程里执行，可以同时达到两个目的：</p>
-<ol>
-<li>子进程进行AOF重写期间，服务器进行（父进程）可以处理命令请求。</li>
-<li>子进程带有服务器进程的数据副本，使用子进程而不是线程，可以在避免使用锁的情况下，保证数据的安全性。</li>
+</li>
+</ul>
+</li>
+<li><p>如何让索引失效？为什么失效？</p>
+<ul>
+<li><p>如果条件中有or，即使其中有条件带索引也不会使用(这也是为什么尽量少用or的原因)</p>
+</li>
+<li><p>对于多列索引，不是使用的第一部分(第一个)，则不会使用索引</p>
+</li>
+<li><p>like查询是以%开头</p>
+</li>
+<li><p>如果列类型是字符串，那一定要在条件中将数据使用引号引用起来,否则不使用索引</p>
+<p>参考：<a href="https://yq.aliyun.com/articles/388463" target="_blank" rel="noopener">https://yq.aliyun.com/articles/388463</a></p>
+</li>
+</ul>
+</li>
+<li><p>forEach中修改循环的对象，为什么回发生ConcurrentModificationException错误？</p>
+<p>foreach的背后实现原理其实就是Iterator（关于Iterator可以看<a href="https://link.jianshu.com?t=http://www.programcreek.com/2013/02/java-design-pattern-iterator/" target="_blank" rel="noopener">Java Design Pattern: Iterator</a>）。在这里，迭代ArrayList的Iterator中有一个变量<code>expectedModCount</code>，该变量会初始化和<code>modCount</code>相等，但如果接下来如果集合进行修改<code>modCount</code>改变，就会造成<code>expectedModCount!=modCount</code>，此时就会抛出java.util.ConcurrentModificationException异常</p>
+</li>
+<li><p>JDK8中CurrentHashMap为什么会放弃使用分段锁？</p>
+<p>段Segment继承了重入锁ReentrantLock，有了锁的功能，每个锁控制的是一段，当每个Segment越来越大时，锁的粒度就变得有些大了。</p>
+<ul>
+<li>分段锁的优势在于保证在操作不同段 map 的时候可以并发执行，操作同段 map 的时候，进行锁的竞争和等待。这相对于直接对整个map同步synchronized是有优势的。</li>
+<li>缺点在于分成很多段时会比较浪费内存空间(不连续，碎片化); 操作map时竞争同一个分段锁的概率非常小时，分段锁反而会造成更新等操作的长时间等待; 当某个段很大时，分段锁的性能会下降。</li>
+<li>为什么不用ReentrantLock而用synchronized ?<ul>
+<li>减少内存开销:如果使用ReentrantLock则需要节点继承AQS来获得同步支持，增加内存开销，而1.8中只有头节点需要进行同步。</li>
+<li>内部优化:synchronized则是JVM直接支持的，JVM能够在运行时作出相应的优化措施：锁粗化、锁消除、锁自旋等等。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>线程的创建方式？</p>
+</li>
 </ol>
-<h5 id="AOF重写过程中数据不一致的问题解决"><a href="#AOF重写过程中数据不一致的问题解决" class="headerlink" title="AOF重写过程中数据不一致的问题解决"></a>AOF重写过程中数据不一致的问题解决</h5><p>&emsp;&emsp;为了解决这种数据不一致问题，Redis服务器设置了一个AOF重写缓冲区，这个缓冲区在服务器创建子进程之后开始使用，当Redis服务器执行了一个写命令之后，它会同时将这个写命令发送给AOF缓冲区和AOF重写缓冲区。</p>
-<p>当子进程完成AOF重写工作之后，它会向父进程发送一个信号，父进程在接到该信号之后，会调用一个信号处理函数，并执行以下工作：</p>
-<ol>
-<li>将AOF重写缓冲区中的所有内容写入到新AOF文件汇总，这是新AOF文件所保存的数据库将和服务器当前的数据库状态一致。</li>
-<li>对新的AOF文件进行改名，原子地覆盖现有的AOF文件，完成新旧两个AOF文件的替换。</li>
+<ol start="9">
+<li><p>JDK8的ExecutorService和JDK7的 Executor有什么区别？ExecutorService的实现类有哪些？分别都有什么作用？</p>
+<p>参考：<a href="https://yemengying.com/2017/03/17/difference-between-executor-executorService/" target="_blank" rel="noopener">https://yemengying.com/2017/03/17/difference-between-executor-executorService/</a></p>
+</li>
+<li><p>Struts2的多线程和SpringMVC的单线程有什么区别？</p>
+</li>
+<li><p>Mybaits的二级缓存如何开启？二级缓存如何保证与数据库数据的一致性？</p>
+<p>参考：<a href="https://yq.aliyun.com/articles/608941" target="_blank" rel="noopener">https://yq.aliyun.com/articles/608941</a></p>
+</li>
+<li><p>Redis分布式锁应该如何设计？</p>
+<p>参考：<a href="https://juejin.im/entry/5a502ac2518825732b19a595" target="_blank" rel="noopener">https://juejin.im/entry/5a502ac2518825732b19a595</a></p>
+</li>
+<li><p>ReentrantLock的使用？</p>
+<p>参考：<a href="https://juejin.im/post/5aeb0a8b518825673a2066f0" target="_blank" rel="noopener">https://juejin.im/post/5aeb0a8b518825673a2066f0</a></p>
+</li>
 </ol>
-<p>&emsp;&emsp;在整个AOF后台重写过程中，只有信号处理函数执行时会对服务器进程（父进程）造成阻塞，其余时间，AOF后台重写都不会阻塞父进程。</p>
 
       
     </div>
@@ -398,7 +444,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Redis/" rel="tag"># Redis</a>
+            <a href="/tags/Interview/" rel="tag"># Interview</a>
           
         </div>
       
@@ -411,8 +457,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/07/28/rocketmq1/" rel="next" title="RocketMQ结构初识">
-                <i class="fa fa-chevron-left"></i> RocketMQ结构初识
+              <a href="/2019/06/04/springboot01/" rel="next" title="SpringBoot是如何进行自动配置的？">
+                <i class="fa fa-chevron-left"></i> SpringBoot是如何进行自动配置的？
               </a>
             
           </div>
@@ -420,10 +466,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/12/01/rocketmq2/" rel="prev" title="RocketMQ事务消息知悉">
-                RocketMQ事务消息知悉 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -592,7 +634,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB持久化"><span class="nav-number">1.</span> <span class="nav-text">RDB持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RDB文件的创建与加载"><span class="nav-number">1.1.</span> <span class="nav-text">RDB文件的创建与加载</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF持久化"><span class="nav-number">2.</span> <span class="nav-text">AOF持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF文件的创建"><span class="nav-number">2.1.</span> <span class="nav-text">AOF文件的创建</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#命令追加"><span class="nav-number">2.1.1.</span> <span class="nav-text">命令追加</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF的文件写入"><span class="nav-number">2.1.2.</span> <span class="nav-text">AOF的文件写入</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF的文件同步"><span class="nav-number">2.1.3.</span> <span class="nav-text">AOF的文件同步</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF文件载入与数据还原"><span class="nav-number">2.2.</span> <span class="nav-text">AOF文件载入与数据还原</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF重写"><span class="nav-number">2.3.</span> <span class="nav-text">AOF重写</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#AOF重写过程中数据不一致的问题解决"><span class="nav-number">2.3.1.</span> <span class="nav-text">AOF重写过程中数据不一致的问题解决</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#20191205"><span class="nav-number">1.</span> <span class="nav-text">20191205</span></a></li></ol></div>
             
 
           </div>
