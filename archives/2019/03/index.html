@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Redis,">
+  <meta name="keywords" content="NOW">
 
 
 
@@ -81,21 +81,13 @@
 
 
 
-<meta name="description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
-<meta name="keywords" content="Redis">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Redis事件机制">
-<meta property="og:url" content="http://yoursite.com/2019/04/25/redisEvent1/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="武夫人">
+<meta property="og:url" content="http://yoursite.com/archives/2019/03/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2019/04/25/redisEvent1/FileEvent.png">
-<meta property="og:image" content="http://yoursite.com/2019/04/25/redisEvent1/Event.png">
-<meta property="og:updated_time" content="2019-11-25T12:33:27.115Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis事件机制">
-<meta name="twitter:description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
-<meta name="twitter:image" content="http://yoursite.com/2019/04/25/redisEvent1/FileEvent.png">
+<meta name="twitter:title" content="武夫人">
 
 
 
@@ -125,13 +117,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/04/25/redisEvent1/">
+  <link rel="canonical" href="http://yoursite.com/archives/2019/03/">
 
 
 
 
 
-  <title>Redis事件机制 | 武夫人</title>
+  <title>归档 | 武夫人</title>
   
 
 
@@ -150,7 +142,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left page-archive">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -264,173 +256,72 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
-    
+  
+  
+  
+  <div class="post-block archive">
+    <div id="posts" class="posts-collapse">
+      <span class="archive-move-on"></span>
 
-  
+      <span class="archive-page-counter">
+        
+        
+        
+          
+        
+        嗯..! 目前共计 11 篇日志。 继续努力。
+      </span>
 
-  
-  
-  
+      
+
+        
+        
+        
+
+        
+          
+          <div class="collection-title">
+            <h1 class="archive-year" id="archive-year-2019">2019</h1>
+          </div>
+        
+        
+
+        
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/25/redisEvent1/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="L.Wang">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="武夫人">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h2 class="post-title">
         
-        
-          <h1 class="post-title" itemprop="name headline">Redis事件机制</h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
+            <a class="post-title-link" href="/2019/03/06/threadpool1/" itemprop="url">
               
-                <span class="post-meta-item-text">发表于</span>
+                <span itemprop="name">线程池参数分析</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T22:05:23+08:00">
-                2019-04-25
-              </time>
-            
+            </a>
+        
+      </h2>
 
-            
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2019-03-06T07:51:52+08:00" content="2019-03-06">
+          03-06
+        </time>
+      </div>
 
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <blockquote>
-<p>Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。<a id="more"></a>  </p>
-</blockquote>
-<h3 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h3><p>Redis基于Reactor模式开发了自己的网络时间处理器：这个处理器被称为文件事件处理器。</p>
-<p>文件事件处理器使用I/O多路复用程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的时间处理器。</p>
-<p>当被监听的套接字准备好执行连结应答（accept）读取（read）写入（write）关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</p>
-<p><img src="/2019/04/25/redisEvent1/FileEvent.png" alt="&#39;文件事件处理器的四个组成部分&#39;"></p>
-<p>尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都放到一个队列里面，然后通过这个队列，以有序、同步、每次一个套接字的方式向文件事件分派器传送套接字。</p>
-<p>文件事件分派器接受I/O多路复用程序传来的套接字，并根据套接字产生的事件的类型，调用相应的事件处理器。</p>
-<h3 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h3><p>Redis的时间事件分为以下两类：</p>
-<p>定时事件：让一段程序在指定的时间之后执行一次。<br>周期事件：让一段程序每隔指定时间就执行一次。</p>
-<p>服务器将所有时间事件都放在一个无序链表中，每当时间事件执行器运行时，它就遍历整个链表，查找所有已到达的时间事件，并调用相应的事件处理器。</p>
-<p><img src="/2019/04/25/redisEvent1/Event.png" alt="事件处理角度下的服务器运行流程"></p>
-<p>时间事件的运用实例：serverCron函数，它的主要工作包括：</p>
-<ol>
-<li>更新服务器的各类统计信息，比如：时间、内存占用、数据库占用情况等。</li>
-<li>清理数据库中的过期键值对。</li>
-<li>关闭清理连接失效的客户端。</li>
-<li>尝试进行AOF或RDB之久化操作。</li>
-<li>如果服务器是主服务器，对从服务器进行定期同步。</li>
-<li>如果处于集群模式，对集群进行定期同步和连接测试。</li>
-</ol>
-<p>文件事件和时间事件是合作关系，服务器会轮流处理这两种事件，并且处理事件的过程中不会进行抢占。</p>
-
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/Redis/" rel="tag"># Redis</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2019/03/06/threadpool1/" rel="next" title="线程池参数分析">
-                <i class="fa fa-chevron-left"></i> 线程池参数分析
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/04/29/tcc01/" rel="prev" title="分布式事务学习">
-                分布式事务学习 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
+    </header>
   </article>
 
 
 
-    <div class="post-spread">
       
+
     </div>
   </div>
+  
+  
+  
+
+  
+
 
 
           </div>
@@ -438,10 +329,6 @@
 
 
           
-
-  
-
-
 
         </div>
         
@@ -462,17 +349,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -569,22 +447,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#文件事件"><span class="nav-number">1.</span> <span class="nav-text">文件事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间事件"><span class="nav-number">2.</span> <span class="nav-text">时间事件</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -725,10 +587,6 @@
 
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 

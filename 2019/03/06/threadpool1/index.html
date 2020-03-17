@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Redis,">
+  <meta name="keywords" content="线程池,">
 
 
 
@@ -81,21 +81,18 @@
 
 
 
-<meta name="description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
-<meta name="keywords" content="Redis">
+<meta name="description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
+<meta name="keywords" content="线程池">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Redis事件机制">
-<meta property="og:url" content="http://yoursite.com/2019/04/25/redisEvent1/index.html">
+<meta property="og:title" content="线程池参数分析">
+<meta property="og:url" content="http://yoursite.com/2019/03/06/threadpool1/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
+<meta property="og:description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2019/04/25/redisEvent1/FileEvent.png">
-<meta property="og:image" content="http://yoursite.com/2019/04/25/redisEvent1/Event.png">
-<meta property="og:updated_time" content="2019-11-25T12:33:27.115Z">
+<meta property="og:updated_time" content="2019-12-09T01:31:05.115Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis事件机制">
-<meta name="twitter:description" content="Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。">
-<meta name="twitter:image" content="http://yoursite.com/2019/04/25/redisEvent1/FileEvent.png">
+<meta name="twitter:title" content="线程池参数分析">
+<meta name="twitter:description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
 
 
 
@@ -125,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/04/25/redisEvent1/">
+  <link rel="canonical" href="http://yoursite.com/2019/03/06/threadpool1/">
 
 
 
 
 
-  <title>Redis事件机制 | 武夫人</title>
+  <title>线程池参数分析 | 武夫人</title>
   
 
 
@@ -278,7 +275,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/25/redisEvent1/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/06/threadpool1/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="L.Wang">
@@ -295,7 +292,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Redis事件机制</h1>
+          <h1 class="post-title" itemprop="name headline">线程池参数分析</h1>
         
 
         <div class="post-meta">
@@ -307,8 +304,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T22:05:23+08:00">
-                2019-04-25
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-06T07:51:52+08:00">
+                2019-03-06
               </time>
             
 
@@ -346,28 +343,19 @@
 
       
         <blockquote>
-<p>Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。<a id="more"></a>  </p>
+<p>一直在使用线程池创建线程，但是线程池的参数有什么用呢？<a id="more"></a></p>
 </blockquote>
-<h3 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h3><p>Redis基于Reactor模式开发了自己的网络时间处理器：这个处理器被称为文件事件处理器。</p>
-<p>文件事件处理器使用I/O多路复用程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的时间处理器。</p>
-<p>当被监听的套接字准备好执行连结应答（accept）读取（read）写入（write）关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</p>
-<p><img src="/2019/04/25/redisEvent1/FileEvent.png" alt="&#39;文件事件处理器的四个组成部分&#39;"></p>
-<p>尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都放到一个队列里面，然后通过这个队列，以有序、同步、每次一个套接字的方式向文件事件分派器传送套接字。</p>
-<p>文件事件分派器接受I/O多路复用程序传来的套接字，并根据套接字产生的事件的类型，调用相应的事件处理器。</p>
-<h3 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h3><p>Redis的时间事件分为以下两类：</p>
-<p>定时事件：让一段程序在指定的时间之后执行一次。<br>周期事件：让一段程序每隔指定时间就执行一次。</p>
-<p>服务器将所有时间事件都放在一个无序链表中，每当时间事件执行器运行时，它就遍历整个链表，查找所有已到达的时间事件，并调用相应的事件处理器。</p>
-<p><img src="/2019/04/25/redisEvent1/Event.png" alt="事件处理角度下的服务器运行流程"></p>
-<p>时间事件的运用实例：serverCron函数，它的主要工作包括：</p>
-<ol>
-<li>更新服务器的各类统计信息，比如：时间、内存占用、数据库占用情况等。</li>
-<li>清理数据库中的过期键值对。</li>
-<li>关闭清理连接失效的客户端。</li>
-<li>尝试进行AOF或RDB之久化操作。</li>
-<li>如果服务器是主服务器，对从服务器进行定期同步。</li>
-<li>如果处于集群模式，对集群进行定期同步和连接测试。</li>
+<h4 id="参数概念"><a href="#参数概念" class="headerlink" title="参数概念"></a>参数概念</h4><ol>
+<li>corePoolSize：线程池中一直存活者的线程的最小数量。</li>
+<li>maximumPoolSize：线程池内能够容纳线程数量的最大值，但是如果提供的阻塞队列（也就是参数workQueue）是一个无界队列，那么提供的maximumPoolSize的数值将毫无意义。</li>
+<li>keepAliveTime：空闲线程处于等待状态的超时时间。如果执行的任务相对较多，并且每个任务执行的时间比较短，那么可以为该参数设置一个相对较大的数值，以提高线程的利用率。如果执行的任务相对较少，线程池使用率相对较低，那么可以先将参数设置为一个较小的数值，通过超时停止的机制来降低系统线程资源的开销，后续如果发现线程池的使用率逐渐增高以后，线程池会根据当前调教的任务数自动创建新的线程，当然，也可以手动调用setKeepAliveTime（long， TimeUnit)方法来重新设定keepAliveTime字段的值。</li>
+<li>workQueue：workQueue是一个内部元素为Runable(各种任务，通常是异步任务)的阻塞队列。阻塞队列是一种类似于“生产者-消费者”模型的队列。当队列已满时如果继续向队列中插入元素，该插入操作将被阻塞一直处于等待状态，知道队列中有元素被移除产生空位子后，才有可能执行这次插入操作；当队列为空时，如果继续执行元素的删除或获取操作，该操作同样会被阻塞而进入等待状态，直到队列中又有了该元素后，才能执行该操作。</li>
 </ol>
-<p>文件事件和时间事件是合作关系，服务器会轮流处理这两种事件，并且处理事件的过程中不会进行抢占。</p>
+<h4 id="线程池操作"><a href="#线程池操作" class="headerlink" title="线程池操作"></a>线程池操作</h4><ol>
+<li>如果线程池中正在运行的线程数少于核心线程数，那么线程池总是倾向于创建一个新线程来执行该任务，而不是将该任务提交到该队列workQueue中进行等待。</li>
+<li>如果线程池中正在运行的线程数不少于核心线程数，那么线程池总是倾向于将该任务提交到队列workQueue中先让其等待，而不是创建一个新线程来执行该任务。</li>
+<li>如果线程池中正在运行的线程数不少于核心线程数，并且线程池中的阻塞队列也满了使得该任务入队失败，那么线程池会去判断当前池子中运行的线程数是否已经等于了该线程池允许运行的最大线程数maximumPoolSize，如果发现已经等于了，说明线程池已满，无法在继续创建新的线程了，那么就会拒绝执行该任务。如果发现运行的线程数小于池子允许的最大线程数，那么就会创建一个线程（创建的线程是非核心线程）来执行该任务。</li>
+</ol>
 
       
     </div>
@@ -385,7 +373,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Redis/" rel="tag"># Redis</a>
+            <a href="/tags/线程池/" rel="tag"># 线程池</a>
           
         </div>
       
@@ -398,8 +386,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/03/06/threadpool1/" rel="next" title="线程池参数分析">
-                <i class="fa fa-chevron-left"></i> 线程池参数分析
+              <a href="/2018/12/01/rocketmq2/" rel="next" title="RocketMQ事务消息知悉">
+                <i class="fa fa-chevron-left"></i> RocketMQ事务消息知悉
               </a>
             
           </div>
@@ -408,8 +396,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/04/29/tcc01/" rel="prev" title="分布式事务学习">
-                分布式事务学习 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/04/25/redisEvent1/" rel="prev" title="Redis事件机制">
+                Redis事件机制 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -579,7 +567,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#文件事件"><span class="nav-number">1.</span> <span class="nav-text">文件事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间事件"><span class="nav-number">2.</span> <span class="nav-text">时间事件</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#参数概念"><span class="nav-number">1.</span> <span class="nav-text">参数概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程池操作"><span class="nav-number">2.</span> <span class="nav-text">线程池操作</span></a></li></ol></div>
             
 
           </div>
