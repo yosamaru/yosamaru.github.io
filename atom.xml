@@ -38,32 +38,6 @@
   </entry>
   
   <entry>
-    <title>SQL语句使用</title>
-    <link href="http://yoursite.com/2020/04/21/20001/"/>
-    <id>http://yoursite.com/2020/04/21/20001/</id>
-    <published>2020-04-21T13:55:03.000Z</published>
-    <updated>2020-04-21T15:41:28.634Z</updated>
-    
-    <content type="html"><![CDATA[<ol><li><p>Group By</p><p>select t.b, sum(t.a), avg(t.b), max(t.c) from table t where t.a &gt; 1 group t.b having t.b =2;</p><p>group by 对数据进行分组查询，在分完组后，可以对数据字段进行聚合查询。至此，查询结果就为一张表,而having 就是对查询的结果进行过滤。</p></li></ol>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Group By&lt;/p&gt;
-&lt;p&gt;select t.b, sum(t.a), avg(t.b), max(t.c) from table t where t.a &amp;gt; 1 group t.b having t.b =2;&lt;/p&gt;
-&lt;p&gt;group by 
-      
-    
-    </summary>
-    
-    
-      <category term="SQL" scheme="http://yoursite.com/tags/SQL/"/>
-    
-  </entry>
-  
-  <entry>
     <title>SpringBoot是如何进行自动配置的？</title>
     <link href="http://yoursite.com/2019/06/04/springboot01/"/>
     <id>http://yoursite.com/2019/06/04/springboot01/</id>
