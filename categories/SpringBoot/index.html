@@ -64,7 +64,7 @@
 
 
 
-  <meta name="keywords" content="RocketMQ,">
+  <meta name="keywords" content="NOW">
 
 
 
@@ -77,20 +77,13 @@
 
 
 
-<meta name="description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
-<meta name="keywords" content="RocketMQ">
-<meta property="og:type" content="article">
-<meta property="og:title" content="RocketMQ结构初识">
-<meta property="og:url" content="http://yoursite.com/2018/07/28/rocketmq1/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="武夫人">
+<meta property="og:url" content="http://yoursite.com/categories/SpringBoot/index.html">
 <meta property="og:site_name" content="武夫人">
-<meta property="og:description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/07/28/rocketmq1/rocketmq01.png">
-<meta property="og:updated_time" content="2019-11-28T11:09:00.126Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="RocketMQ结构初识">
-<meta name="twitter:description" content="要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构">
-<meta name="twitter:image" content="http://yoursite.com/2018/07/28/rocketmq1/rocketmq01.png">
+<meta name="twitter:title" content="武夫人">
 
 
 
@@ -120,13 +113,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/07/28/rocketmq1/">
+  <link rel="canonical" href="http://yoursite.com/categories/SpringBoot/">
 
 
 
 
 
-  <title>RocketMQ结构初识 | 武夫人</title>
+  <title>分类: SpringBoot | 武夫人</title>
   
 
 
@@ -145,7 +138,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -259,155 +252,53 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
-    
+  
+  
+  
+  <div class="post-block category">
 
-  
+    <div id="posts" class="posts-collapse">
+      <div class="collection-title">
+        <h1>SpringBoot<small>分类</small>
+        </h1>
+      </div>
 
-  
-  
-  
+      
+        
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/28/rocketmq1/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="L.Wang">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="武夫人">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h2 class="post-title">
         
-        
-          <h1 class="post-title" itemprop="name headline">RocketMQ结构初识</h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
+            <a class="post-title-link" href="/2019/06/04/springboot01/" itemprop="url">
               
-                <span class="post-meta-item-text">发表于</span>
+                <span itemprop="name">SpringBoot是如何进行自动配置的？</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-28T18:44:25+08:00">
-                2018-07-28
-              </time>
-            
+            </a>
+        
+      </h2>
 
-            
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2019-06-04T23:20:19+08:00" content="2019-06-04">
+          06-04
+        </time>
+      </div>
 
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <blockquote>
-<p>要了解RocketMQ最好的方式就是查看源码，但是在看之前需要了解RocketMQ设计结构，并熟练使用它。所以就先了解结构<a id="more"></a></p>
-</blockquote>
-<p>&emsp;&emsp;Broker消息服务器在启动时间向所有NameServer注册，消息生产者（Producer）在发送消息之前<font color="red">先从NameServer获取Broker服务器地址列表</font>，然后根据<font color="red">负载算法</font>从列表中选择一台消息服务器进行消息发送。NameServer与每台Broker服务器保持<font color="red">长连接</font>，并间隔10s检测Broker是否存活，<font color="red">如果检测到Broker宕机，则从路由器中将其移除</font>。</p>
-<p><img src="/2018/07/28/rocketmq1/rocketmq01.png" alt="RokcetMQ物理部署图"></p>
-
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/RocketMQ/" rel="tag"># RocketMQ</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2018/06/19/redisObjectInfo/" rel="next" title="Redis数据对象初识">
-                <i class="fa fa-chevron-left"></i> Redis数据对象初识
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/11/25/redisback/" rel="prev" title="Redis持久化">
-                Redis持久化 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
+    </header>
   </article>
 
 
-
-    <div class="post-spread">
       
     </div>
+
   </div>
+  
+  
+  
+
+  
+
 
 
           </div>
@@ -415,10 +306,6 @@
 
 
           
-
-  
-
-
 
         </div>
         
@@ -455,7 +342,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">10</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -466,7 +353,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -477,7 +364,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -677,10 +564,6 @@
 
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 
