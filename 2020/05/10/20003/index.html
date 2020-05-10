@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="SPI,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="武夫人" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。">
+<meta name="keywords" content="SPI">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo的SPI的机制初探">
+<meta property="og:url" content="http://yoursite.com/2020/05/10/20003/index.html">
+<meta property="og:site_name" content="武夫人">
+<meta property="og:description" content="SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/20003/SPI-mysql.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/20003/SPI-mysql2.png">
+<meta property="og:updated_time" content="2020-05-10T11:36:12.055Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dubbo的SPI的机制初探">
+<meta name="twitter:description" content="SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。">
+<meta name="twitter:image" content="http://yoursite.com/2020/05/10/20003/SPI-mysql.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"left"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/05/10/20003/">
+
+
+
+
+
+  <title>Dubbo的SPI的机制初探 | 武夫人</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">武夫人</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">L.Wang Blogs</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/10/20003/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="L.Wang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="武夫人">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Dubbo的SPI的机制初探</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-05-10T18:56:17+08:00">
+                2020-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/dubbo/" itemprop="url" rel="index">
+                    <span itemprop="name">dubbo</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。<a id="more"></a></p>
+</blockquote>
+<h2 id="什么是SPI？"><a href="#什么是SPI？" class="headerlink" title="什么是SPI？"></a>什么是SPI？</h2><p>SPI的全称是Service Provider Interface，用来被第三方实现或者扩展的API。也就是说SPI是一种服务发现机制。而对于我的理解就是：SPI是为某个接口寻找实现类的机制，有点类似于IOC，用于解耦。</p>
+<h4 id="JDK-SPI"><a href="#JDK-SPI" class="headerlink" title="JDK SPI"></a>JDK SPI</h4><p>SPI具体约定：当服务的提供者，提供了一种服务之后，在jar包的META-INF/Services/目录里同时创建一个以服务接口全路径命名的文件，该文件里就是实现该服务的接口的具体命名的实现类。当第三方服务需要引入这个模块的时候，就可以通过该jar包的MATE-INF/Services/里的配置文件找到具体的实现类名，通过JDK提供的工具类java.util.ServiceLoader进行加载实例化。</p>
+<p>最常见的就是数据库驱动包，以mysql为例，正如上面所讲的一样，在META-INF/Services/目录下创建以java.sql.Driver文件，文件中是接口的具体实现类。</p>
+<p><img src="/2020/05/10/20003/SPI-mysql.png" alt="MySQL SPI配置"></p>
+<p>而配置文件中具体的实现类如下：</p>
+<p><img src="/2020/05/10/20003/SPI-mysql2.png" alt="MySQL 驱动具体实现类"></p>
+<h2 id="Dubbo的SPI"><a href="#Dubbo的SPI" class="headerlink" title="Dubbo的SPI"></a>Dubbo的SPI</h2><h4 id="Dubbo-SPI约定"><a href="#Dubbo-SPI约定" class="headerlink" title="Dubbo SPI约定"></a>Dubbo SPI约定</h4><p>dubbo的SPI加载类和JDK的SPI记载类不同， dubbo的记载类org.apache.dubbo.common.extension.ExtensionLoader，进入源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 兼容了JDK SPI的配置文件放置位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SERVICES_DIRECTORY = <span class="string">"META-INF/services/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_DIRECTORY = <span class="string">"META-INF/dubbo/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + <span class="string">"internal/"</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * synchronized in getExtensionClasses</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    cacheDefaultExtensionName();</span><br><span class="line">		<span class="comment">// 加载配置文件约定放置的位置</span></span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由上面两段源码可知，在Dubbo启动的时候，会默认扫描META/-INF/services、META-INF/dubbo/、META-INF/dubbo/internal三个目录，其实Dubbo的SPI和JDK SPI类似，同样需要在以上三个目录中放置以全路径名为命名的配置文件，而配置文件的内容为key=扩展节点实现的全路径名，如果由多个实现类则使用换行符分割。key会作为Dubbo SPI注解中的传入参数。</p>
+<h4 id="SPI的缓存"><a href="#SPI的缓存" class="headerlink" title="SPI的缓存"></a>SPI的缓存</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 扩展类与对应的扩展类加载起缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, ExtensionLoader&lt;?&gt;&gt; EXTENSION_LOADERS = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展名与类初始化后的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, Object&gt; EXTENSION_INSTANCES = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Class&lt;?&gt; type;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ExtensionFactory objectFactory;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展类与扩展名缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, String&gt; cachedNames = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通扩展类缓存，不包括自适应的拓展类和Wrapper</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Map&lt;String, Class&lt;?&gt;&gt;&gt; cachedClasses = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与@Activate的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; cachedActivates = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与扩展对象缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;String, Holder&lt;Object&gt;&gt; cachedInstances = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 实例化后的自适应扩展对象，只能同时存在一个</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Object&gt; cachedAdaptiveInstance = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 自适应扩展类缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Class&lt;?&gt; cachedAdaptiveClass = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">private</span> String cachedDefaultName;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Throwable createAdaptiveInstanceError;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Wrapper类缓存</span></span><br><span class="line"><span class="keyword">private</span> Set&lt;Class&lt;?&gt;&gt; cachedWrapperClasses;</span><br></pre></td></tr></table></figure>
+<p>由上面源码可以明确的分为Class缓存，实例缓存。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addExtension</span><span class="params">(String name, Class&lt;?&gt; clazz)</span> </span>&#123;</span><br><span class="line">  	<span class="comment">// 1. 加载Class</span></span><br><span class="line">    getExtensionClasses(); <span class="comment">// load classes</span></span><br><span class="line">		<span class="comment">// 2. Class 判断</span></span><br><span class="line">    <span class="keyword">if</span> (!type.isAssignableFrom(clazz)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" doesn't implement the Extension "</span> + type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (clazz.isInterface()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" can't be interface!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!clazz.isAnnotationPresent(Adaptive.class)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.isBlank(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name is blank (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// Class 缓存中是否已经有该Class类</span></span><br><span class="line">        <span class="keyword">if</span> (cachedClasses.get().containsKey(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name "</span> +</span><br><span class="line">                    name + <span class="string">" already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">				<span class="comment">// 将要加载的扩展类的名字进行保存（即使扩展类获取不到，也可以知道是哪个扩展类没有获取到）</span></span><br><span class="line">        cachedNames.put(clazz, name);</span><br><span class="line">      	<span class="comment">// 将Class文件存入缓存</span></span><br><span class="line">        cachedClasses.get().put(name, clazz);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (cachedAdaptiveClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Adaptive Extension already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cachedAdaptiveClass = clazz;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 加载Class</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; getExtensionClasses() &#123;</span><br><span class="line">  			<span class="comment">// 1.1 从Class缓存中获取Class</span></span><br><span class="line">        Map&lt;String, Class&lt;?&gt;&gt; classes = cachedClasses.get();</span><br><span class="line">  			<span class="comment">// 1.2 Class 不存在</span></span><br><span class="line">        <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (cachedClasses) &#123;</span><br><span class="line">              	<span class="comment">// 防止重复获取</span></span><br><span class="line">                classes = cachedClasses.get();</span><br><span class="line">                <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  	<span class="comment">// 1.3 从配置中加载Class类</span></span><br><span class="line">                    classes = loadExtensionClasses();</span><br><span class="line">                  	<span class="comment">// 1.4 缓存中保存Class类</span></span><br><span class="line">                    cachedClasses.set(classes);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">  			<span class="comment">// 1.5 返回Class类</span></span><br><span class="line">        <span class="keyword">return</span> classes;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><p>Class缓存优先从缓存中读取，如果缓存中不存在，则加载配置文件，根据配置把Class缓存到内存中，但并不会全部初始化，会按需初始化。</p>
+</li>
+<li><p>实例缓存每次获取的时候，会先从缓存中获取，如果缓存中读取不到，则重新加载缓存起来。</p>
+</li>
+</ol>
+<p>而Class缓存和实例缓存根据其特性又可以分为普通扩展类、包装扩展类、自适应扩展类、其他缓存。</p>
+<h2 id="两者的区别"><a href="#两者的区别" class="headerlink" title="两者的区别"></a>两者的区别</h2><p>在官方文档中两者的比较如下：</p>
+<ol>
+<li>JDK标准的SPI会一次性实例化扩展的所有实现，即使内有用上也会加载。</li>
+<li>如果加载失败，则连扩展的名称都获取不到。</li>
+<li>增加了对扩展IoC和AOP的支持，一个扩展可以直接setter注入其他扩展。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/SPI/" rel="tag"># SPI</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/05/06/20002/" rel="next" title="Spring Security认证流程概述（一）">
+                <i class="fa fa-chevron-left"></i> Spring Security认证流程概述（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">L.Wang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yosamaru" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:leiw0168@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://example.com/" title="Title" target="_blank">Title</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是SPI？"><span class="nav-number">1.</span> <span class="nav-text">什么是SPI？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#JDK-SPI"><span class="nav-number">1.0.1.</span> <span class="nav-text">JDK SPI</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo的SPI"><span class="nav-number">2.</span> <span class="nav-text">Dubbo的SPI</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Dubbo-SPI约定"><span class="nav-number">2.0.1.</span> <span class="nav-text">Dubbo SPI约定</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SPI的缓存"><span class="nav-number">2.0.2.</span> <span class="nav-text">SPI的缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#两者的区别"><span class="nav-number">3.</span> <span class="nav-text">两者的区别</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">L.Wang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
