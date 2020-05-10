@@ -1,7 +1,8 @@
 ---
 title: Redis数据对象初识
 date: 2018-6-19 17:31:43
-tags: redis
+categories: Redis
+tags: [Redis Object]
 ---
 
 > &emsp;&emsp;首先带着这几个问题：
