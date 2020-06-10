@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2019/04/29/tcc01/xa.png">
 <meta property="og:image" content="http://yoursite.com/2019/04/29/tcc01/tcc.png">
-<meta property="og:updated_time" content="2020-05-10T11:36:12.064Z">
+<meta property="og:updated_time" content="2020-06-10T13:22:59.568Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式事务学习">
 <meta name="twitter:description" content="事务在分布式服务中至关重要，本文主要学习TCC三阶段的流程与模式。了解XA模式。">
@@ -195,7 +195,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-05-10 19:36:12" itemprop="dateModified" datetime="2020-05-10T19:36:12+08:00">2020-05-10</time>
+                <time title="Modified: 2020-06-10 21:22:59" itemprop="dateModified" datetime="2020-06-10T21:22:59+08:00">2020-06-10</time>
               </span>
 
           
@@ -220,14 +220,14 @@
 <li>隔离性：多个事务并发执行时，一个事务的执行不应影响其他事务的执行，如同只有这一个操作在被数据库所执行一样。</li>
 <li>持久性：已被提交的事务对数据库的修改应该永久保存在数据库中。在事务结束时，此操作不可逆转。</li>
 </ol>
-<h4 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h4><h5 id="XA协议"><a href="#XA协议" class="headerlink" title="XA协议"></a>XA协议</h5><p>XA协议由Tuxedo首先提出，并交给X/Open组织，作为资源管理器（数据库）与事务管理器的接口标准。XA协议采用两阶段提交的方式来管理分布式事务。XA接口提供资源管理器与事务管理器之间进行通信的标准交口。</p>
+<h3 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h3><h4 id="XA协议"><a href="#XA协议" class="headerlink" title="XA协议"></a>XA协议</h4><p>XA协议由Tuxedo首先提出，并交给X/Open组织，作为资源管理器（数据库）与事务管理器的接口标准。XA协议采用两阶段提交的方式来管理分布式事务。XA接口提供资源管理器与事务管理器之间进行通信的标准交口。</p>
 <p>资源管理器（RM）：资源管理器提供对事务性资源的访问。数据库其实就是一种资源管理器，必须提交或者回滚由RM管理的事务。</p>
 <p>事务管理器（TM）：主要协调作为全局事务中的部分事务。它作为RMS中每个事务的协调者。</p>
 <p>执行全局事务的过程采用两阶段提交（2PC），全局事务是发生在分支执行的操作之后的：</p>
 <p>第一阶段：所有分支的操作都准备好了，由TM告知每个分支准备提交，此时，作为全局事务中的每个RM记录着在稳定存储中的动作。</p>
 <p>第二阶段：TM会告诉RMS是否提交或回滚，如果所有分支表明准备好能够提交时，RMS会被告知提交，如果任何一个RM表明没有准备好或者不能提交，则进行全部回滚。</p>
 <p><img src="/2019/04/29/tcc01/xa.png" alt="两阶段更新"></p>
-<h5 id="TCC提交"><a href="#TCC提交" class="headerlink" title="TCC提交"></a>TCC提交</h5><p>TCC(Try-Confirm-Cancel)分布式事务模型相对于XA等传统模型，其特征在于它不依赖资源管理器（RM）对分布式事务的支持，而是通过对业务逻辑的分解来实现分布式事务。</p>
+<h4 id="TCC提交"><a href="#TCC提交" class="headerlink" title="TCC提交"></a>TCC提交</h4><p>TCC(Try-Confirm-Cancel)分布式事务模型相对于XA等传统模型，其特征在于它不依赖资源管理器（RM）对分布式事务的支持，而是通过对业务逻辑的分解来实现分布式事务。</p>
 <p>初步操作Try：完成所有业务检查，预留必须的业务资源。</p>
 <p>确认操作Confirm：真正执行的业务逻辑，不在任务业务检查，只使用Try阶段预留的业务资源。因此，只要Try操作成功，Confirm必须能成功。另外，Confirm操作需满足幂等性，保证一笔分布式事务又且只能成功一次。</p>
 <p>取消操作Cancel：释放Try阶段预留的业务资源。同样的，Cancel操作也需要满足幂等性。</p>
@@ -247,7 +247,7 @@
 <li>若主业务服务提交本地事务，则TCC模型分别调用所有从业务服务的Confirm接口；若主业务服务回滚本地事务，则分别调用Cancel接口；</li>
 <li>所有从业务服务的Confirm或Cancel操作完成后，全局事务结束。</li>
 </ol>
-<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>写了一个例子用来学习TCC，地址：<a href="https://github.com/yosamaru/tccDemo" target="_blank" rel="noopener">https://github.com/yosamaru/tccDemo</a></p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>写了一个例子用来学习TCC，地址：<a href="https://github.com/yosamaru/tccDemo" target="_blank" rel="noopener">https://github.com/yosamaru/tccDemo</a></p>
 
     </div>
 
@@ -331,7 +331,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#事务特性"><span class="nav-number">1.</span> <span class="nav-text">事务特性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式事务"><span class="nav-number">1.1.</span> <span class="nav-text">分布式事务</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#XA协议"><span class="nav-number">1.1.1.</span> <span class="nav-text">XA协议</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#TCC提交"><span class="nav-number">1.1.2.</span> <span class="nav-text">TCC提交</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例子"><span class="nav-number">1.2.</span> <span class="nav-text">例子</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#事务特性"><span class="nav-number">1.</span> <span class="nav-text">事务特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式事务"><span class="nav-number">2.</span> <span class="nav-text">分布式事务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#XA协议"><span class="nav-number">2.1.</span> <span class="nav-text">XA协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCC提交"><span class="nav-number">2.2.</span> <span class="nav-text">TCC提交</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#例子"><span class="nav-number">3.</span> <span class="nav-text">例子</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
