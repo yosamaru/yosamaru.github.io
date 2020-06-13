@@ -3,12 +3,12 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 武夫人
+title: Richard
 subtitle: L.Wang Blogs
 description: 
 keywords:
 author: L.Wang
-language: zh-Hans
+language: en
 timezone: Asia/Shanghai
 
 # URL
@@ -74,12 +74,20 @@ pagination_dir: page
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: next
-plugin:
-- hexo-generate-feed
-feed:
-  type: atom
-  path: atom.xml
-  limit: 20
+#plugin:
+#- hexo-generate-feed
+#feed:
+#  type: atom
+#  path: atom.xml
+#  limit: 20
+#  hub:
+#  content:
+#  content_limit: 140
+#  content_limit_delim: ' '
+#  order_by: -date
+#  icon: icon.png
+#  autodiscovery: true
+#  template:
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -87,3 +95,10 @@ deploy:
   type: git
   repo:	https://github.com/yosamaru/yosamaru.github.io.git
   branch: master
+
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
+
