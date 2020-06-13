@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
@@ -17,16 +17,16 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="生活：   宅男一枚，闲暇时去品尝美食。喜欢LOL，最喜欢的英雄是亚索，只要我E的够快，你的问号是跟不上我的。😄😄工作：从事金融领域技术：总是涉猎很多的技术，但是最后发现都是停留在会用的阶段上，感觉很悲伤。未来：稳扎稳打，技不在多，在于精。口号：“后浪”也好，“韭菜”也罢！只管向前走，也只能向前走，不必自暴自弃，也不必靠岁月静好的鸡汤度日，有一份热，就发一份光。就如萤火虫一般，不必等候火炬，就">
 <meta property="og:type" content="website">
 <meta property="og:title" content="迎风而立的韭菜">
 <meta property="og:url" content="http://yoursite.com/about/index.html">
-<meta property="og:site_name" content="武夫人">
+<meta property="og:site_name" content="Richard">
 <meta property="og:description" content="生活：   宅男一枚，闲暇时去品尝美食。喜欢LOL，最喜欢的英雄是亚索，只要我E的够快，你的问号是跟不上我的。😄😄工作：从事金融领域技术：总是涉猎很多的技术，但是最后发现都是停留在会用的阶段上，感觉很悲伤。未来：稳扎稳打，技不在多，在于精。口号：“后浪”也好，“韭菜”也罢！只管向前走，也只能向前走，不必自暴自弃，也不必靠岁月静好的鸡汤度日，有一份热，就发一份光。就如萤火虫一般，不必等候火炬，就">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:locale" content="en">
 <meta property="og:updated_time" content="2020-05-10T11:36:12.067Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="迎风而立的韭菜">
@@ -41,11 +41,11 @@
     sidebar: "",
     isHome : false,
     isPost : false,
-    lang   : 'zh-Hans'
+    lang   : 'en'
   };
 </script>
 
-  <title>迎风而立的韭菜 | 武夫人
+  <title>迎风而立的韭菜 | Richard
 </title>
   
 
@@ -97,7 +97,7 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">武夫人</h1>
+      <h1 class="site-title">Richard</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
       <p class="site-subtitle" itemprop="description">L.Wang Blogs</p>
@@ -105,6 +105,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -134,11 +135,38 @@
     <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -163,7 +191,7 @@
     
     
     
-    <div class="post-block" lang="zh-Hans">
+    <div class="post-block" lang="en">
       <header class="post-header">
 
 <h1 class="post-title" itemprop="name headline">迎风而立的韭菜
@@ -248,6 +276,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="L.Wang"
+      src="/images/me.png">
   <p class="site-author-name" itemprop="name">L.Wang</p>
   <div class="site-description" itemprop="description"></div>
 </div>
@@ -339,6 +369,8 @@
 
 
 
+
+  <script src="/js/local-search.js"></script>
 
 
 
