@@ -30,7 +30,7 @@
 <meta property="og:locale" content="en">
 <meta property="og:image" content="http://yoursite.com/2021/09/13/20210913/memoryModel.png">
 <meta property="og:image" content="http://yoursite.com/2021/09/13/20210913/memory02.png">
-<meta property="og:updated_time" content="2021-09-13T16:47:09.550Z">
+<meta property="og:updated_time" content="2021-09-15T15:17:46.220Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java内存模型小记01">
 <meta name="twitter:description" content="今天和老大聊JVM内存模型，一开口，老大就指出我把JVM内存模型和Java虚拟机运行时数据区搞反了，在网上翻了很多博客，发现都搞反了，翻了 JSR-133: Java Memory Model and Thread Specification 和《深入JVM虚拟机》才了解具体的定义。">
@@ -223,7 +223,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-09-14 00:47:09" itemprop="dateModified" datetime="2021-09-14T00:47:09+08:00">2021-09-14</time>
+                <time title="Modified: 2021-09-15 23:17:46" itemprop="dateModified" datetime="2021-09-15T23:17:46+08:00">2021-09-15</time>
               </span>
 
           
@@ -245,8 +245,7 @@
 <p>主内存：存储Java所有的变量</p>
 <p>工作内存：每条线程都有自己的工作内存，其中保留了被该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作（读取和赋值等）都必须在工作内存中进行，而不能直接读写主内存中的变量。 </p>
 <p>不同的线程之间无法直接访问对方的工作内存中的变量，线程间变量值的传递均需要通过主内存来完成。</p>
-<p>#内存间如何交互</p>
-<p><img src="/2021/09/13/20210913/memory02.png" alt="内存交互"></p>
+<h1 id="内存间如何交互"><a href="#内存间如何交互" class="headerlink" title="内存间如何交互"></a>内存间如何交互</h1><p><img src="/2021/09/13/20210913/memory02.png" alt="内存交互"></p>
 <p>程序需要对主内存中的testA=1变量进行访问时，如果为了保证并发修改问题：</p>
 <ol>
 <li><p>先对主内存中的testA=1进行lock加锁。（lock）</p>
@@ -264,8 +263,7 @@
 <li>在执行unlock操作前，必须把变量同步写入到主内存中。unlock和lock的执行次数一致。</li>
 </ol>
 <p>对于大部分的数据并发竞争问题适用（synchronized），但是volatile有自己的特殊规则。</p>
-<p>#特殊规则- volatile变量</p>
-<p>当一个变量定于为volatile，它将具备两种特性：</p>
+<h1 id="特殊规则-volatile变量"><a href="#特殊规则-volatile变量" class="headerlink" title="特殊规则- volatile变量"></a>特殊规则- volatile变量</h1><p>当一个变量定于为volatile，它将具备两种特性：</p>
 <ol>
 <li><p>保证此变量对所有线程可见性。</p>
 <p>在各个线程的工作内存中，volatile变量也可以存在不一致的情况，但由于每次使用之前都要刷新，执行引擎看不到不一致的情况，因此可以任务不存在一致性问题。但是Java里面的运算并非原子操作，导致volatile变量的运算在并发下一样时不安全的。</p>
@@ -277,8 +275,7 @@
 <p>在写操作插入许多内存屏障来保证处理器不发生乱序执行。</p>
 </li>
 </ol>
-<p>#内存模型解决了什么问题</p>
-<p>Java的内存模型保证在并发过程中处理问题的原子性、可见性、有序性。</p>
+<h1 id="模型解决了什么问题"><a href="#模型解决了什么问题" class="headerlink" title="模型解决了什么问题"></a>模型解决了什么问题</h1><p>Java的内存模型保证在并发过程中处理问题的原子性、可见性、有序性。</p>
 <p>原子性：Lock/unlock，synchronize的monitorenter/monitorexit满足原子性的需求。</p>
 <p>可见性：volatile/synchronize/final保证了可见性。</p>
 <p>有序性：</p>
@@ -367,7 +364,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#内存模型概念"><span class="nav-number">1.</span> <span class="nav-text">内存模型概念</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#内存模型概念"><span class="nav-number">1.</span> <span class="nav-text">内存模型概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存间如何交互"><span class="nav-number">2.</span> <span class="nav-text">内存间如何交互</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#特殊规则-volatile变量"><span class="nav-number">3.</span> <span class="nav-text">特殊规则- volatile变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模型解决了什么问题"><span class="nav-number">4.</span> <span class="nav-text">模型解决了什么问题</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
