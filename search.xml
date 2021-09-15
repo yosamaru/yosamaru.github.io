@@ -1,57 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Dubbo Cluster如何获取最优的服务提供者？</title>
-    <url>/2020/05/19/20001/</url>
-    <content><![CDATA[<blockquote>
-<p>Cluster的核心功能之一就是寻找出合适的服务提供者，供消费者远程调用。<br>如何寻找：</p>
-<ol>
-<li><p>获取消费者能够远程调用的所有服务提供者列表。</p>
-</li>
-<li><p>选择合适的Invoker。</p>
-</li>
-<li><p>如果只有一个Invoker则直接返回，有多个Invoker，则通过loadbalance组件选择出合适的Invoker。 </p>
- <a id="more"></a>
-</li>
-</ol>
-</blockquote>
-<h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>Invocation：会话域，它持有调用过程中的变量，比如方法名，参数等。<br>Invoker:实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。</p>
-<h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>集群 Cluster 用途是将多个服务提供者合并为一个 Cluster Invoker，并将这个 Invoker 暴露给服务消费者。以Failover Cluster为基础了解Cluster执行</p>
-<p> Cluster：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@SPI</span>(FailoverCluster.NAME)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Merge the directory invokers to a virtual invoker.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> &lt;T&gt;</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> directory</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> cluster invoker  </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> RpcException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Adaptive</span></span><br><span class="line">    &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailoverCluster</span> <span class="keyword">implements</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> String NAME = <span class="string">"failover"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="comment">// 创建并返回FailoverClusterInvoker</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FailoverClusterInvoker&lt;T&gt;(directory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="Cluster获取Invoker流程"><a href="#Cluster获取Invoker流程" class="headerlink" title="Cluster获取Invoker流程"></a>Cluster获取Invoker流程</h4><p>AbstractClusterInvoker:</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Result <span class="title">invoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    checkWhetherDestroyed();</span><br><span class="line">    <span class="comment">// binding attachments into invocation.</span></span><br><span class="line">    Map&lt;String, String&gt; contextAttachments = RpcContext.getContext().getAttachments();</span><br><span class="line">    <span class="keyword">if</span> (contextAttachments != <span class="keyword">null</span> &amp;&amp; contextAttachments.size() != <span class="number">0</span>) &#123;</span><br><span class="line">        ((RpcInvocation) invocation).addAttachments(contextAttachments);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 列举invoker</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; invokers = list(invocation);</span><br><span class="line">    <span class="comment">// 加载LoadBalance </span></span><br><span class="line">    LoadBalance loadbalance = initLoadBalance(invokers, invocation);</span><br><span class="line">    RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);</span><br><span class="line">    <span class="keyword">return</span> doInvoke(invocation, invokers, loadbalance);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>FailoverClusterInvoker</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@SuppressWarnings</span>(&#123;<span class="string">"unchecked"</span>, <span class="string">"rawtypes"</span>&#125;)</span><br><span class="line"><span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, <span class="keyword">final</span> List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; copyInvokers = invokers;</span><br><span class="line">    <span class="comment">// invokers判空检查</span></span><br><span class="line">    checkInvokers(copyInvokers, invocation);</span><br><span class="line">          <span class="comment">// 获取访问的方法</span></span><br><span class="line">    String methodName = RpcUtils.getMethodName(invocation);    </span><br><span class="line">    <span class="comment">// 重试次数</span></span><br><span class="line">    <span class="keyword">int</span> len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (len &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        len = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// retry loop.</span></span><br><span class="line">    RpcException le = <span class="keyword">null</span>; <span class="comment">// last exception.</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; invoked = <span class="keyword">new</span> ArrayList&lt;Invoker&lt;T&gt;&gt;(copyInvokers.size()); <span class="comment">// invoked invokers.</span></span><br><span class="line">    Set&lt;String&gt; providers = <span class="keyword">new</span> HashSet&lt;String&gt;(len);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// 在进行重试前重新列举Invoker，这样做的好数是如果某个服务挂了，通过调用list可得到最新可用的Invoker列表</span></span><br><span class="line">            checkWhetherDestroyed();</span><br><span class="line">            copyInvokers = list(invocation);</span><br><span class="line">            <span class="comment">// check again</span></span><br><span class="line">            checkInvokers(copyInvokers, invocation);</span><br><span class="line">        &#125;</span><br><span class="line">         <span class="comment">// 通过负载均衡选择invoker</span></span><br><span class="line">        Invoker&lt;T&gt; invoker = select(loadbalance, invocation, copyInvokers, invoked);</span><br><span class="line">        <span class="comment">// 添加invoker到invoked 列表中</span></span><br><span class="line">        invoked.add(invoker);</span><br><span class="line">        <span class="comment">// 设置invoked到RPC上下文中</span></span><br><span class="line">        RpcContext.getContext().setInvokers((List) invoked);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 调用目标Invoker的invoke方法</span></span><br><span class="line">            Result result = invoker.invoke(invocation);</span><br><span class="line">            <span class="keyword">if</span> (le != <span class="keyword">null</span> &amp;&amp; logger.isWarnEnabled()) &#123;</span><br><span class="line">                logger.warn(<span class="string">"Although retry the method "</span> + methodName</span><br><span class="line">                        + <span class="string">" in the service "</span> + getInterface().getName()</span><br><span class="line">                        + <span class="string">" was successful by the provider "</span> + invoker.getUrl().getAddress()</span><br><span class="line">                        + <span class="string">", but there have been failed providers "</span> + providers</span><br><span class="line">                        + <span class="string">" ("</span> + providers.size() + <span class="string">"/"</span> + copyInvokers.size()</span><br><span class="line">                        + <span class="string">") from the registry "</span> + directory.getUrl().getAddress()</span><br><span class="line">                        + <span class="string">" on the consumer "</span> + NetUtils.getLocalHost()</span><br><span class="line">                        + <span class="string">" using the dubbo version "</span> + Version.getVersion() + <span class="string">". Last error is: "</span></span><br><span class="line">                        + le.getMessage(), le);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> result;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RpcException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (e.isBiz()) &#123; <span class="comment">// biz exception.</span></span><br><span class="line">                <span class="keyword">throw</span> e;</span><br><span class="line">            &#125;</span><br><span class="line">            le = e;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            le = <span class="keyword">new</span> RpcException(e.getMessage(), e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            providers.add(invoker.getUrl().getAddress());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(le.getCode(), <span class="string">"Failed to invoke the method "</span></span><br><span class="line">            + methodName + <span class="string">" in the service "</span> + getInterface().getName()</span><br><span class="line">            + <span class="string">". Tried "</span> + len + <span class="string">" times of the providers "</span> + providers</span><br><span class="line">            + <span class="string">" ("</span> + providers.size() + <span class="string">"/"</span> + copyInvokers.size()</span><br><span class="line">            + <span class="string">") from the registry "</span> + directory.getUrl().getAddress()</span><br><span class="line">            + <span class="string">" on the consumer "</span> + NetUtils.getLocalHost() + <span class="string">" using the dubbo version "</span></span><br><span class="line">            + Version.getVersion() + <span class="string">". Last error is: "</span></span><br><span class="line">            + le.getMessage(), le.getCause() != <span class="keyword">null</span> ? le.getCause() : le);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="获取最合适的服务流程"><a href="#获取最合适的服务流程" class="headerlink" title="获取最合适的服务流程"></a>获取最合适的服务流程</h4><p>选择Invoker的方法</p>
-<ol>
-<li>首先根据loadbalance进行选择，如果invoker在以前选择的列表中或invoker不能提供服务进行reselect。  </li>
-<li>重选的验证规则：selected&gt;available，这个规则保证选中的invoker是在以前选中的列表中最小变动的，也保证了其适用性。</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Invoker&lt;T&gt; <span class="title">select</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                        List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line"><span class="comment">// 判空检查</span></span><br><span class="line"><span class="keyword">if</span> (CollectionUtils.isEmpty(invokers)) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">String methodName = invocation == <span class="keyword">null</span> ? StringUtils.EMPTY : invocation.getMethodName();</span><br><span class="line"><span class="comment">// 判断请求的方法为粘滞连接</span></span><br><span class="line"><span class="keyword">boolean</span> sticky = invokers.get(<span class="number">0</span>).getUrl()</span><br><span class="line">        .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);</span><br><span class="line"></span><br><span class="line"><span class="comment">//检测invokers列表是否包含stickyInvoker。如果不包含，说明stickyInvoker代表的服务提供者挂了，此时需要将其置为空</span></span><br><span class="line"><span class="keyword">if</span> (stickyInvoker != <span class="keyword">null</span> &amp;&amp; !invokers.contains(stickyInvoker)) &#123;</span><br><span class="line">    stickyInvoker = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 在sticky为true且stickyInvoker!=null的情况下，如果selected包含stickeyInvoker,表明stickeyInvoker对应的服务提供者可能因为网络原因未能成功提供服务，但是该提供者并没挂，此时invokers列表中仍存在该服务提供者对应的Invoker</span></span><br><span class="line"><span class="keyword">if</span> (sticky &amp;&amp; stickyInvoker != <span class="keyword">null</span> &amp;&amp; (selected == <span class="keyword">null</span> || !selected.contains(stickyInvoker))) &#123;</span><br><span class="line">    <span class="comment">// availablecheck表示是否开启了可用性检查，如果开启了，则调用stickyInvoker的isAvailable方法进行检查，若果检查通过，则直接返回stickyInvoker</span></span><br><span class="line">    <span class="keyword">if</span> (availablecheck &amp;&amp; stickyInvoker.isAvailable()) &#123;</span><br><span class="line">        <span class="keyword">return</span> stickyInvoker;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 粘性连接为null或者不可用，需要进行重现选择</span></span><br><span class="line">Invoker&lt;T&gt; invoker = doSelect(loadbalance, invocation, invokers, selected);</span><br><span class="line"><span class="comment">// 如果sticky为true，将负载均衡组件选择的Invoker赋值给stickyInvoker</span></span><br><span class="line"><span class="keyword">if</span> (sticky) &#123;</span><br><span class="line">    stickyInvoker = invoker;</span><br><span class="line">&#125;</span><br><span class="line">    <span class="keyword">return</span> invoker;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>选择Invoker</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Invoker&lt;T&gt; <span class="title">doSelect</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                            List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    <span class="comment">// 判空检查</span></span><br><span class="line">    <span class="keyword">if</span> (CollectionUtils.isEmpty(invokers)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (invokers.size() == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> invokers.get(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 通过负载均衡选择Invoker</span></span><br><span class="line">    Invoker&lt;T&gt; invoker = loadbalance.select(invokers, getUrl(), invocation);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果selected包含负载均衡选择出的Invoker,或者该Invoker无法经过可用性检查，此时进行重选</span></span><br><span class="line">    <span class="keyword">if</span> ((selected != <span class="keyword">null</span> &amp;&amp; selected.contains(invoker))</span><br><span class="line">            || (!invoker.isAvailable() &amp;&amp; getUrl() != <span class="keyword">null</span> &amp;&amp; availablecheck)) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 进行重选</span></span><br><span class="line">            Invoker&lt;T&gt; rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);</span><br><span class="line">            <span class="keyword">if</span> (rInvoker != <span class="keyword">null</span>) &#123;</span><br><span class="line">                invoker = rInvoker;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">//获取Invoker在Invokers中的位置</span></span><br><span class="line">                <span class="keyword">int</span> index = invokers.indexOf(invoker);</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//获取index+1位置处的Invoker</span></span><br><span class="line">                    invoker = invokers.get((index + <span class="number">1</span>) % invokers.size());</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(e.getMessage() + <span class="string">" may because invokers list dynamic change, ignore."</span>, e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            logger.error(<span class="string">"cluster reselect fail reason is :"</span> + t.getMessage() + <span class="string">" if can not solve, you can set cluster.availablecheck=false in url"</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> invoker;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>重现进行选择 </p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Invoker&lt;T&gt; <span class="title">reselect</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                            List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected, <span class="keyword">boolean</span> availablecheck)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Allocating one in advance, this list is certain to be used.</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; reselectInvokers = <span class="keyword">new</span> ArrayList&lt;&gt;(</span><br><span class="line">            invokers.size() &gt; <span class="number">1</span> ? (invokers.size() - <span class="number">1</span>) : invokers.size());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 尝试不从selected中获取</span></span><br><span class="line">    <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">        <span class="comment">// 检查可用性</span></span><br><span class="line">        <span class="keyword">if</span> (availablecheck &amp;&amp; !invoker.isAvailable()) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果selected列表包含当前invoker，则将其添加到reselectInvokers中。</span></span><br><span class="line">        <span class="keyword">if</span> (selected == <span class="keyword">null</span> || !selected.contains(invoker)) &#123;</span><br><span class="line">            reselectInvokers.add(invoker);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// reselectInvoker不为空，通过负载均衡组件进行筛选Invoker</span></span><br><span class="line">    <span class="keyword">if</span> (!reselectInvokers.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">return</span> loadbalance.select(reselectInvokers, getUrl(), invocation);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 仅从selected中查找能用的Invoker</span></span><br><span class="line">   <span class="comment">// selected 列表中查找可用的 Invoker，并将其添加到 reselectInvokers 集合中</span></span><br><span class="line">    <span class="keyword">if</span> (selected != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : selected) &#123;</span><br><span class="line">            <span class="keyword">if</span> ((invoker.isAvailable()) <span class="comment">// available first</span></span><br><span class="line">                    &amp;&amp; !reselectInvokers.contains(invoker)) &#123;</span><br><span class="line">                reselectInvokers.add(invoker);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!reselectInvokers.isEmpty()) &#123;</span><br><span class="line">        <span class="comment">// 在此进行筛选，返回结果</span></span><br><span class="line">        <span class="keyword">return</span> loadbalance.select(reselectInvokers, getUrl(), invocation);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>目的选择合适的Invoker执行，如何选择？</p>
-<ol>
-<li>获取所有的服务实现者。</li>
-<li>从所有的服务中选择出合适的实现者。</li>
-<li>选择粘滞连接的实现者。</li>
-<li>Invoker的唯一，就选择这个Invoker。</li>
-<li>loadbalance组件进行选择。</li>
-</ol>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">[<span class="string">Dubbo</span>](<span class="link">http://dubbo.apache.org/zh-cn/docs/source_code_guide/cluster.html</span>)</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>dubbo</category>
-      </categories>
-      <tags>
-        <tag>Cluster</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Spring Security认证流程概述（一）</title>
     <url>/2020/05/06/20002/</url>
     <content><![CDATA[<blockquote>
@@ -109,6 +58,156 @@
       </categories>
       <tags>
         <tag>Spring Security</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Dubbo Cluster如何获取最优的服务提供者？</title>
+    <url>/2020/05/19/20001/</url>
+    <content><![CDATA[<blockquote>
+<p>Cluster的核心功能之一就是寻找出合适的服务提供者，供消费者远程调用。<br>如何寻找：</p>
+<ol>
+<li><p>获取消费者能够远程调用的所有服务提供者列表。</p>
+</li>
+<li><p>选择合适的Invoker。</p>
+</li>
+<li><p>如果只有一个Invoker则直接返回，有多个Invoker，则通过loadbalance组件选择出合适的Invoker。 </p>
+ <a id="more"></a>
+</li>
+</ol>
+</blockquote>
+<h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>Invocation：会话域，它持有调用过程中的变量，比如方法名，参数等。<br>Invoker:实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。</p>
+<h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>集群 Cluster 用途是将多个服务提供者合并为一个 Cluster Invoker，并将这个 Invoker 暴露给服务消费者。以Failover Cluster为基础了解Cluster执行</p>
+<p> Cluster：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@SPI</span>(FailoverCluster.NAME)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Merge the directory invokers to a virtual invoker.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> &lt;T&gt;</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> directory</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> cluster invoker  </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> RpcException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Adaptive</span></span><br><span class="line">    &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailoverCluster</span> <span class="keyword">implements</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> String NAME = <span class="string">"failover"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="comment">// 创建并返回FailoverClusterInvoker</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FailoverClusterInvoker&lt;T&gt;(directory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Cluster获取Invoker流程"><a href="#Cluster获取Invoker流程" class="headerlink" title="Cluster获取Invoker流程"></a>Cluster获取Invoker流程</h4><p>AbstractClusterInvoker:</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Result <span class="title">invoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    checkWhetherDestroyed();</span><br><span class="line">    <span class="comment">// binding attachments into invocation.</span></span><br><span class="line">    Map&lt;String, String&gt; contextAttachments = RpcContext.getContext().getAttachments();</span><br><span class="line">    <span class="keyword">if</span> (contextAttachments != <span class="keyword">null</span> &amp;&amp; contextAttachments.size() != <span class="number">0</span>) &#123;</span><br><span class="line">        ((RpcInvocation) invocation).addAttachments(contextAttachments);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 列举invoker</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; invokers = list(invocation);</span><br><span class="line">    <span class="comment">// 加载LoadBalance </span></span><br><span class="line">    LoadBalance loadbalance = initLoadBalance(invokers, invocation);</span><br><span class="line">    RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);</span><br><span class="line">    <span class="keyword">return</span> doInvoke(invocation, invokers, loadbalance);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>FailoverClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@SuppressWarnings</span>(&#123;<span class="string">"unchecked"</span>, <span class="string">"rawtypes"</span>&#125;)</span><br><span class="line"><span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, <span class="keyword">final</span> List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; copyInvokers = invokers;</span><br><span class="line">    <span class="comment">// invokers判空检查</span></span><br><span class="line">    checkInvokers(copyInvokers, invocation);</span><br><span class="line">          <span class="comment">// 获取访问的方法</span></span><br><span class="line">    String methodName = RpcUtils.getMethodName(invocation);    </span><br><span class="line">    <span class="comment">// 重试次数</span></span><br><span class="line">    <span class="keyword">int</span> len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (len &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        len = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// retry loop.</span></span><br><span class="line">    RpcException le = <span class="keyword">null</span>; <span class="comment">// last exception.</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; invoked = <span class="keyword">new</span> ArrayList&lt;Invoker&lt;T&gt;&gt;(copyInvokers.size()); <span class="comment">// invoked invokers.</span></span><br><span class="line">    Set&lt;String&gt; providers = <span class="keyword">new</span> HashSet&lt;String&gt;(len);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// 在进行重试前重新列举Invoker，这样做的好数是如果某个服务挂了，通过调用list可得到最新可用的Invoker列表</span></span><br><span class="line">            checkWhetherDestroyed();</span><br><span class="line">            copyInvokers = list(invocation);</span><br><span class="line">            <span class="comment">// check again</span></span><br><span class="line">            checkInvokers(copyInvokers, invocation);</span><br><span class="line">        &#125;</span><br><span class="line">         <span class="comment">// 通过负载均衡选择invoker</span></span><br><span class="line">        Invoker&lt;T&gt; invoker = select(loadbalance, invocation, copyInvokers, invoked);</span><br><span class="line">        <span class="comment">// 添加invoker到invoked 列表中</span></span><br><span class="line">        invoked.add(invoker);</span><br><span class="line">        <span class="comment">// 设置invoked到RPC上下文中</span></span><br><span class="line">        RpcContext.getContext().setInvokers((List) invoked);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 调用目标Invoker的invoke方法</span></span><br><span class="line">            Result result = invoker.invoke(invocation);</span><br><span class="line">            <span class="keyword">if</span> (le != <span class="keyword">null</span> &amp;&amp; logger.isWarnEnabled()) &#123;</span><br><span class="line">                logger.warn(<span class="string">"Although retry the method "</span> + methodName</span><br><span class="line">                        + <span class="string">" in the service "</span> + getInterface().getName()</span><br><span class="line">                        + <span class="string">" was successful by the provider "</span> + invoker.getUrl().getAddress()</span><br><span class="line">                        + <span class="string">", but there have been failed providers "</span> + providers</span><br><span class="line">                        + <span class="string">" ("</span> + providers.size() + <span class="string">"/"</span> + copyInvokers.size()</span><br><span class="line">                        + <span class="string">") from the registry "</span> + directory.getUrl().getAddress()</span><br><span class="line">                        + <span class="string">" on the consumer "</span> + NetUtils.getLocalHost()</span><br><span class="line">                        + <span class="string">" using the dubbo version "</span> + Version.getVersion() + <span class="string">". Last error is: "</span></span><br><span class="line">                        + le.getMessage(), le);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> result;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RpcException e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (e.isBiz()) &#123; <span class="comment">// biz exception.</span></span><br><span class="line">                <span class="keyword">throw</span> e;</span><br><span class="line">            &#125;</span><br><span class="line">            le = e;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            le = <span class="keyword">new</span> RpcException(e.getMessage(), e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            providers.add(invoker.getUrl().getAddress());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(le.getCode(), <span class="string">"Failed to invoke the method "</span></span><br><span class="line">            + methodName + <span class="string">" in the service "</span> + getInterface().getName()</span><br><span class="line">            + <span class="string">". Tried "</span> + len + <span class="string">" times of the providers "</span> + providers</span><br><span class="line">            + <span class="string">" ("</span> + providers.size() + <span class="string">"/"</span> + copyInvokers.size()</span><br><span class="line">            + <span class="string">") from the registry "</span> + directory.getUrl().getAddress()</span><br><span class="line">            + <span class="string">" on the consumer "</span> + NetUtils.getLocalHost() + <span class="string">" using the dubbo version "</span></span><br><span class="line">            + Version.getVersion() + <span class="string">". Last error is: "</span></span><br><span class="line">            + le.getMessage(), le.getCause() != <span class="keyword">null</span> ? le.getCause() : le);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="获取最合适的服务流程"><a href="#获取最合适的服务流程" class="headerlink" title="获取最合适的服务流程"></a>获取最合适的服务流程</h4><p>选择Invoker的方法</p>
+<ol>
+<li>首先根据loadbalance进行选择，如果invoker在以前选择的列表中或invoker不能提供服务进行reselect。  </li>
+<li>重选的验证规则：selected&gt;available，这个规则保证选中的invoker是在以前选中的列表中最小变动的，也保证了其适用性。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Invoker&lt;T&gt; <span class="title">select</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                        List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line"><span class="comment">// 判空检查</span></span><br><span class="line"><span class="keyword">if</span> (CollectionUtils.isEmpty(invokers)) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">String methodName = invocation == <span class="keyword">null</span> ? StringUtils.EMPTY : invocation.getMethodName();</span><br><span class="line"><span class="comment">// 判断请求的方法为粘滞连接</span></span><br><span class="line"><span class="keyword">boolean</span> sticky = invokers.get(<span class="number">0</span>).getUrl()</span><br><span class="line">        .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);</span><br><span class="line"></span><br><span class="line"><span class="comment">//检测invokers列表是否包含stickyInvoker。如果不包含，说明stickyInvoker代表的服务提供者挂了，此时需要将其置为空</span></span><br><span class="line"><span class="keyword">if</span> (stickyInvoker != <span class="keyword">null</span> &amp;&amp; !invokers.contains(stickyInvoker)) &#123;</span><br><span class="line">    stickyInvoker = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 在sticky为true且stickyInvoker!=null的情况下，如果selected包含stickeyInvoker,表明stickeyInvoker对应的服务提供者可能因为网络原因未能成功提供服务，但是该提供者并没挂，此时invokers列表中仍存在该服务提供者对应的Invoker</span></span><br><span class="line"><span class="keyword">if</span> (sticky &amp;&amp; stickyInvoker != <span class="keyword">null</span> &amp;&amp; (selected == <span class="keyword">null</span> || !selected.contains(stickyInvoker))) &#123;</span><br><span class="line">    <span class="comment">// availablecheck表示是否开启了可用性检查，如果开启了，则调用stickyInvoker的isAvailable方法进行检查，若果检查通过，则直接返回stickyInvoker</span></span><br><span class="line">    <span class="keyword">if</span> (availablecheck &amp;&amp; stickyInvoker.isAvailable()) &#123;</span><br><span class="line">        <span class="keyword">return</span> stickyInvoker;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 粘性连接为null或者不可用，需要进行重现选择</span></span><br><span class="line">Invoker&lt;T&gt; invoker = doSelect(loadbalance, invocation, invokers, selected);</span><br><span class="line"><span class="comment">// 如果sticky为true，将负载均衡组件选择的Invoker赋值给stickyInvoker</span></span><br><span class="line"><span class="keyword">if</span> (sticky) &#123;</span><br><span class="line">    stickyInvoker = invoker;</span><br><span class="line">&#125;</span><br><span class="line">    <span class="keyword">return</span> invoker;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>选择Invoker</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Invoker&lt;T&gt; <span class="title">doSelect</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                            List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">    <span class="comment">// 判空检查</span></span><br><span class="line">    <span class="keyword">if</span> (CollectionUtils.isEmpty(invokers)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (invokers.size() == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> invokers.get(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 通过负载均衡选择Invoker</span></span><br><span class="line">    Invoker&lt;T&gt; invoker = loadbalance.select(invokers, getUrl(), invocation);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果selected包含负载均衡选择出的Invoker,或者该Invoker无法经过可用性检查，此时进行重选</span></span><br><span class="line">    <span class="keyword">if</span> ((selected != <span class="keyword">null</span> &amp;&amp; selected.contains(invoker))</span><br><span class="line">            || (!invoker.isAvailable() &amp;&amp; getUrl() != <span class="keyword">null</span> &amp;&amp; availablecheck)) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 进行重选</span></span><br><span class="line">            Invoker&lt;T&gt; rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);</span><br><span class="line">            <span class="keyword">if</span> (rInvoker != <span class="keyword">null</span>) &#123;</span><br><span class="line">                invoker = rInvoker;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">//获取Invoker在Invokers中的位置</span></span><br><span class="line">                <span class="keyword">int</span> index = invokers.indexOf(invoker);</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//获取index+1位置处的Invoker</span></span><br><span class="line">                    invoker = invokers.get((index + <span class="number">1</span>) % invokers.size());</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    logger.warn(e.getMessage() + <span class="string">" may because invokers list dynamic change, ignore."</span>, e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            logger.error(<span class="string">"cluster reselect fail reason is :"</span> + t.getMessage() + <span class="string">" if can not solve, you can set cluster.availablecheck=false in url"</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> invoker;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重现进行选择 </p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Invoker&lt;T&gt; <span class="title">reselect</span><span class="params">(LoadBalance loadbalance, Invocation invocation,</span></span></span><br><span class="line"><span class="function"><span class="params">                            List&lt;Invoker&lt;T&gt;&gt; invokers, List&lt;Invoker&lt;T&gt;&gt; selected, <span class="keyword">boolean</span> availablecheck)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Allocating one in advance, this list is certain to be used.</span></span><br><span class="line">    List&lt;Invoker&lt;T&gt;&gt; reselectInvokers = <span class="keyword">new</span> ArrayList&lt;&gt;(</span><br><span class="line">            invokers.size() &gt; <span class="number">1</span> ? (invokers.size() - <span class="number">1</span>) : invokers.size());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 尝试不从selected中获取</span></span><br><span class="line">    <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">        <span class="comment">// 检查可用性</span></span><br><span class="line">        <span class="keyword">if</span> (availablecheck &amp;&amp; !invoker.isAvailable()) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果selected列表包含当前invoker，则将其添加到reselectInvokers中。</span></span><br><span class="line">        <span class="keyword">if</span> (selected == <span class="keyword">null</span> || !selected.contains(invoker)) &#123;</span><br><span class="line">            reselectInvokers.add(invoker);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// reselectInvoker不为空，通过负载均衡组件进行筛选Invoker</span></span><br><span class="line">    <span class="keyword">if</span> (!reselectInvokers.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">return</span> loadbalance.select(reselectInvokers, getUrl(), invocation);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 仅从selected中查找能用的Invoker</span></span><br><span class="line">   <span class="comment">// selected 列表中查找可用的 Invoker，并将其添加到 reselectInvokers 集合中</span></span><br><span class="line">    <span class="keyword">if</span> (selected != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : selected) &#123;</span><br><span class="line">            <span class="keyword">if</span> ((invoker.isAvailable()) <span class="comment">// available first</span></span><br><span class="line">                    &amp;&amp; !reselectInvokers.contains(invoker)) &#123;</span><br><span class="line">                reselectInvokers.add(invoker);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!reselectInvokers.isEmpty()) &#123;</span><br><span class="line">        <span class="comment">// 在此进行筛选，返回结果</span></span><br><span class="line">        <span class="keyword">return</span> loadbalance.select(reselectInvokers, getUrl(), invocation);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>目的选择合适的Invoker执行，如何选择？</p>
+<ol>
+<li>获取所有的服务实现者。</li>
+<li>从所有的服务中选择出合适的实现者。</li>
+<li>选择粘滞连接的实现者。</li>
+<li>Invoker的唯一，就选择这个Invoker。</li>
+<li>loadbalance组件进行选择。</li>
+</ol>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line">[<span class="string">Dubbo</span>](<span class="link">http://dubbo.apache.org/zh-cn/docs/source_code_guide/cluster.html</span>)</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>dubbo</category>
+      </categories>
+      <tags>
+        <tag>Cluster</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Dubbo的SPI的机制初探</title>
+    <url>/2020/05/10/20003/</url>
+    <content><![CDATA[<blockquote>
+<p>SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。<a id="more"></a></p>
+</blockquote>
+<h2 id="什么是SPI？"><a href="#什么是SPI？" class="headerlink" title="什么是SPI？"></a>什么是SPI？</h2><p>SPI的全称是Service Provider Interface，用来被第三方实现或者扩展的API。也就是说SPI是一种服务发现机制。而对于我的理解就是：SPI是为某个接口寻找实现类的机制，有点类似于IOC，用于解耦。</p>
+<h3 id="JDK-SPI"><a href="#JDK-SPI" class="headerlink" title="JDK SPI"></a>JDK SPI</h3><p>SPI具体约定：当服务的提供者，提供了一种服务之后，在jar包的META-INF/Services/目录里同时创建一个以服务接口全路径命名的文件，该文件里就是实现该服务的接口的具体命名的实现类。当第三方服务需要引入这个模块的时候，就可以通过该jar包的MATE-INF/Services/里的配置文件找到具体的实现类名，通过JDK提供的工具类java.util.ServiceLoader进行加载实例化。</p>
+<p>最常见的就是数据库驱动包，以mysql为例，正如上面所讲的一样，在META-INF/Services/目录下创建以java.sql.Driver文件，文件中是接口的具体实现类。</p>
+<p><img src="/2020/05/10/20003/SPI-mysql.png" alt="MySQL SPI配置"></p>
+<p>而配置文件中具体的实现类如下：</p>
+<p><img src="/2020/05/10/20003/SPI-mysql2.png" alt="MySQL 驱动具体实现类"></p>
+<h2 id="Dubbo的SPI"><a href="#Dubbo的SPI" class="headerlink" title="Dubbo的SPI"></a>Dubbo的SPI</h2><h3 id="Dubbo-SPI约定"><a href="#Dubbo-SPI约定" class="headerlink" title="Dubbo SPI约定"></a>Dubbo SPI约定</h3><p>dubbo的SPI加载类和JDK的SPI记载类不同， dubbo的记载类org.apache.dubbo.common.extension.ExtensionLoader，进入源码：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 兼容了JDK SPI的配置文件放置位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SERVICES_DIRECTORY = <span class="string">"META-INF/services/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_DIRECTORY = <span class="string">"META-INF/dubbo/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + <span class="string">"internal/"</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * synchronized in getExtensionClasses</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    cacheDefaultExtensionName();</span><br><span class="line">		<span class="comment">// 加载配置文件约定放置的位置</span></span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由上面两段源码可知，在Dubbo启动的时候，会默认扫描META/-INF/services、META-INF/dubbo/、META-INF/dubbo/internal三个目录，其实Dubbo的SPI和JDK SPI类似，同样需要在以上三个目录中放置以全路径名为命名的配置文件，而配置文件的内容为key=扩展节点实现的全路径名，如果由多个实现类则使用换行符分割。key会作为Dubbo SPI注解中的传入参数。</p>
+<h3 id="SPI的缓存"><a href="#SPI的缓存" class="headerlink" title="SPI的缓存"></a>SPI的缓存</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 扩展类与对应的扩展类加载起缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, ExtensionLoader&lt;?&gt;&gt; EXTENSION_LOADERS = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展名与类初始化后的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, Object&gt; EXTENSION_INSTANCES = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Class&lt;?&gt; type;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ExtensionFactory objectFactory;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展类与扩展名缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, String&gt; cachedNames = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通扩展类缓存，不包括自适应的拓展类和Wrapper</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Map&lt;String, Class&lt;?&gt;&gt;&gt; cachedClasses = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与@Activate的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; cachedActivates = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与扩展对象缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;String, Holder&lt;Object&gt;&gt; cachedInstances = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 实例化后的自适应扩展对象，只能同时存在一个</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Object&gt; cachedAdaptiveInstance = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 自适应扩展类缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Class&lt;?&gt; cachedAdaptiveClass = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">private</span> String cachedDefaultName;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Throwable createAdaptiveInstanceError;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Wrapper类缓存</span></span><br><span class="line"><span class="keyword">private</span> Set&lt;Class&lt;?&gt;&gt; cachedWrapperClasses;</span><br></pre></td></tr></table></figure>
+<p>由上面源码可以明确的分为Class缓存，实例缓存。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addExtension</span><span class="params">(String name, Class&lt;?&gt; clazz)</span> </span>&#123;</span><br><span class="line">  	<span class="comment">// 1. 加载Class</span></span><br><span class="line">    getExtensionClasses(); <span class="comment">// load classes</span></span><br><span class="line">		<span class="comment">// 2. Class 判断</span></span><br><span class="line">    <span class="keyword">if</span> (!type.isAssignableFrom(clazz)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" doesn't implement the Extension "</span> + type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (clazz.isInterface()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" can't be interface!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!clazz.isAnnotationPresent(Adaptive.class)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.isBlank(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name is blank (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// Class 缓存中是否已经有该Class类</span></span><br><span class="line">        <span class="keyword">if</span> (cachedClasses.get().containsKey(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name "</span> +</span><br><span class="line">                    name + <span class="string">" already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">				<span class="comment">// 将要加载的扩展类的名字进行保存（即使扩展类获取不到，也可以知道是哪个扩展类没有获取到）</span></span><br><span class="line">        cachedNames.put(clazz, name);</span><br><span class="line">      	<span class="comment">// 将Class文件存入缓存</span></span><br><span class="line">        cachedClasses.get().put(name, clazz);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (cachedAdaptiveClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Adaptive Extension already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cachedAdaptiveClass = clazz;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 加载Class</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; getExtensionClasses() &#123;</span><br><span class="line">  			<span class="comment">// 1.1 从Class缓存中获取Class</span></span><br><span class="line">        Map&lt;String, Class&lt;?&gt;&gt; classes = cachedClasses.get();</span><br><span class="line">  			<span class="comment">// 1.2 Class 不存在</span></span><br><span class="line">        <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (cachedClasses) &#123;</span><br><span class="line">              	<span class="comment">// 防止重复获取</span></span><br><span class="line">                classes = cachedClasses.get();</span><br><span class="line">                <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  	<span class="comment">// 1.3 从配置中加载Class类</span></span><br><span class="line">                    classes = loadExtensionClasses();</span><br><span class="line">                  	<span class="comment">// 1.4 缓存中保存Class类</span></span><br><span class="line">                    cachedClasses.set(classes);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">  			<span class="comment">// 1.5 返回Class类</span></span><br><span class="line">        <span class="keyword">return</span> classes;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><p>Class缓存优先从缓存中读取，如果缓存中不存在，则加载配置文件，根据配置把Class缓存到内存中，但并不会全部初始化，会按需初始化。</p>
+</li>
+<li><p>实例缓存每次获取的时候，会先从缓存中获取，如果缓存中读取不到，则重新加载缓存起来。</p>
+</li>
+</ol>
+<p>而Class缓存和实例缓存根据其特性又可以分为普通扩展类、包装扩展类、自适应扩展类、其他缓存。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在官方文档中两者的比较如下：</p>
+<ol>
+<li>JDK标准的SPI会一次性实例化扩展的所有实现，即使内有用上也会加载。</li>
+<li>如果加载失败，则连扩展的名称都获取不到。</li>
+<li>增加了对扩展IoC和AOP的支持，一个扩展可以直接setter注入其他扩展。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>dubbo</category>
+      </categories>
+      <tags>
+        <tag>SPI</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java内存模型小记01</title>
+    <url>/2021/09/13/20210913/</url>
+    <content><![CDATA[<blockquote>
+<p>今天和老大聊JVM内存模型，一开口，老大就指出我把JVM内存模型和Java虚拟机运行时数据区搞反了，在网上翻了很多博客，发现都搞反了，翻了<a href="http://www.cs.umd.edu/~pugh/java/memoryModel/jsr133.pdf" target="_blank" rel="noopener"> JSR-133: Java Memory Model and Thread Specification </a>和《深入JVM虚拟机》才了解具体的定义。<a id="more"></a></p>
+</blockquote>
+<h1 id="内存模型概念"><a href="#内存模型概念" class="headerlink" title="内存模型概念"></a>内存模型概念</h1><p>Java内存模型的主要目标是定义程序中各个变量的访问规则。即在虚拟机中将变量存储到内存和从内存中取出变量这样的底层细节。</p>
+<p><img src="/2021/09/13/20210913/memoryModel.png" alt="交互关系"></p>
+<p>主内存：存储Java所有的变量</p>
+<p>工作内存：每条线程都有自己的工作内存，其中保留了被该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作（读取和赋值等）都必须在工作内存中进行，而不能直接读写主内存中的变量。 </p>
+<p>不同的线程之间无法直接访问对方的工作内存中的变量，线程间变量值的传递均需要通过主内存来完成。</p>
+<p>#内存间如何交互</p>
+<p><img src="/2021/09/13/20210913/memory02.png" alt="内存交互"></p>
+<p>程序需要对主内存中的testA=1变量进行访问时，如果为了保证并发修改问题：</p>
+<ol>
+<li><p>先对主内存中的testA=1进行lock加锁。（lock）</p>
+</li>
+<li><p>读取主内存中的变量testA并将其传输到线程的工作内存中。（read）</p>
+</li>
+<li><p>把从主内存得到的testA变量放入工作内存的变量副本中。（load）</p>
+</li>
+<li><p>当有执行引擎需要这个值时，将工作内存中的testA变量传递给调用者。（use）</p>
+</li>
+<li><p>执行引擎对testA=1重新赋值为testA=2。（assign）</p>
+</li>
+<li>如果对工作内存中的变量重新复制操作（assign），必须将工作内存的testA=2同步到write。如果没有发生任何assign操作，则不允许进行同步操作。（store）</li>
+<li>将同步到主内存的testA=2写入到主内存的变量testA中。</li>
+<li>在执行unlock操作前，必须把变量同步写入到主内存中。unlock和lock的执行次数一致。</li>
+</ol>
+<p>对于大部分的数据并发竞争问题适用（synchronized），但是volatile有自己的特殊规则。</p>
+<p>#特殊规则- volatile变量</p>
+<p>当一个变量定于为volatile，它将具备两种特性：</p>
+<ol>
+<li><p>保证此变量对所有线程可见性。</p>
+<p>在各个线程的工作内存中，volatile变量也可以存在不一致的情况，但由于每次使用之前都要刷新，执行引擎看不到不一致的情况，因此可以任务不存在一致性问题。但是Java里面的运算并非原子操作，导致volatile变量的运算在并发下一样时不安全的。</p>
+<p>由于volatile变量只能保证可见性，在不符合以下的两条规则的运算场景下，可以通过加锁（synchronize/原子类）来保证并发性。</p>
+<p>I    运算结果并不依赖变量的当前值，或者能够确保只有单一的线程修改变量的值。</p>
+<p>II   变量不需要与其他的状态变量共同参与不变约束。</p>
+</li>
+<li><p>禁止指令重排序优化，普通的变量仅仅会保证在该方法的执行过程中所有依赖赋值结果的都能获取到正确的结果，而不能保证变量赋值时操作的顺序与程序代码中的执行顺序一致。</p>
+<p>在写操作插入许多内存屏障来保证处理器不发生乱序执行。</p>
+</li>
+</ol>
+<p>#内存模型解决了什么问题</p>
+<p>Java的内存模型保证在并发过程中处理问题的原子性、可见性、有序性。</p>
+<p>原子性：Lock/unlock，synchronize的monitorenter/monitorexit满足原子性的需求。</p>
+<p>可见性：volatile/synchronize/final保证了可见性。</p>
+<p>有序性：</p>
+<ol>
+<li>volatile的禁止指令重排序语义。</li>
+<li>synchronize的一个变量在同一时刻只允许一条线程对其进行lock操作。</li>
+<li>先行发生原则。</li>
+</ol>
+]]></content>
+      <tags>
+        <tag>JVM</tag>
       </tags>
   </entry>
   <entry>
@@ -180,229 +279,6 @@
       </categories>
       <tags>
         <tag>Router</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Dubbo的SPI的机制初探</title>
-    <url>/2020/05/10/20003/</url>
-    <content><![CDATA[<blockquote>
-<p>SPI 模式在开发中用到的地方很多，但是一直和Dubbo的SPI混淆在一起，本文对JDK的SPI和Dubbo的SPI区分的一个概念的大略了解，为了后取对Dubbo框架的熟悉做一个基础。<a id="more"></a></p>
-</blockquote>
-<h2 id="什么是SPI？"><a href="#什么是SPI？" class="headerlink" title="什么是SPI？"></a>什么是SPI？</h2><p>SPI的全称是Service Provider Interface，用来被第三方实现或者扩展的API。也就是说SPI是一种服务发现机制。而对于我的理解就是：SPI是为某个接口寻找实现类的机制，有点类似于IOC，用于解耦。</p>
-<h3 id="JDK-SPI"><a href="#JDK-SPI" class="headerlink" title="JDK SPI"></a>JDK SPI</h3><p>SPI具体约定：当服务的提供者，提供了一种服务之后，在jar包的META-INF/Services/目录里同时创建一个以服务接口全路径命名的文件，该文件里就是实现该服务的接口的具体命名的实现类。当第三方服务需要引入这个模块的时候，就可以通过该jar包的MATE-INF/Services/里的配置文件找到具体的实现类名，通过JDK提供的工具类java.util.ServiceLoader进行加载实例化。</p>
-<p>最常见的就是数据库驱动包，以mysql为例，正如上面所讲的一样，在META-INF/Services/目录下创建以java.sql.Driver文件，文件中是接口的具体实现类。</p>
-<p><img src="/2020/05/10/20003/SPI-mysql.png" alt="MySQL SPI配置"></p>
-<p>而配置文件中具体的实现类如下：</p>
-<p><img src="/2020/05/10/20003/SPI-mysql2.png" alt="MySQL 驱动具体实现类"></p>
-<h2 id="Dubbo的SPI"><a href="#Dubbo的SPI" class="headerlink" title="Dubbo的SPI"></a>Dubbo的SPI</h2><h3 id="Dubbo-SPI约定"><a href="#Dubbo-SPI约定" class="headerlink" title="Dubbo SPI约定"></a>Dubbo SPI约定</h3><p>dubbo的SPI加载类和JDK的SPI记载类不同， dubbo的记载类org.apache.dubbo.common.extension.ExtensionLoader，进入源码：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 兼容了JDK SPI的配置文件放置位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SERVICES_DIRECTORY = <span class="string">"META-INF/services/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_DIRECTORY = <span class="string">"META-INF/dubbo/"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + <span class="string">"internal/"</span>;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * synchronized in getExtensionClasses</span></span><br><span class="line"><span class="comment"> * */</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    cacheDefaultExtensionName();</span><br><span class="line">		<span class="comment">// 加载配置文件约定放置的位置</span></span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName());</span><br><span class="line">    loadDirectory(extensionClasses, SERVICES_DIRECTORY, type.getName().replace(<span class="string">"org.apache"</span>, <span class="string">"com.alibaba"</span>));</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>由上面两段源码可知，在Dubbo启动的时候，会默认扫描META/-INF/services、META-INF/dubbo/、META-INF/dubbo/internal三个目录，其实Dubbo的SPI和JDK SPI类似，同样需要在以上三个目录中放置以全路径名为命名的配置文件，而配置文件的内容为key=扩展节点实现的全路径名，如果由多个实现类则使用换行符分割。key会作为Dubbo SPI注解中的传入参数。</p>
-<h3 id="SPI的缓存"><a href="#SPI的缓存" class="headerlink" title="SPI的缓存"></a>SPI的缓存</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 扩展类与对应的扩展类加载起缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, ExtensionLoader&lt;?&gt;&gt; EXTENSION_LOADERS = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展名与类初始化后的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, Object&gt; EXTENSION_INSTANCES = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Class&lt;?&gt; type;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ExtensionFactory objectFactory;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展类与扩展名缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;Class&lt;?&gt;, String&gt; cachedNames = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通扩展类缓存，不包括自适应的拓展类和Wrapper</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Map&lt;String, Class&lt;?&gt;&gt;&gt; cachedClasses = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与@Activate的缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; cachedActivates = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 扩展名与扩展对象缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;String, Holder&lt;Object&gt;&gt; cachedInstances = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="comment">// 实例化后的自适应扩展对象，只能同时存在一个</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Holder&lt;Object&gt; cachedAdaptiveInstance = <span class="keyword">new</span> Holder&lt;&gt;();</span><br><span class="line"><span class="comment">// 自适应扩展类缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Class&lt;?&gt; cachedAdaptiveClass = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">private</span> String cachedDefaultName;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Throwable createAdaptiveInstanceError;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Wrapper类缓存</span></span><br><span class="line"><span class="keyword">private</span> Set&lt;Class&lt;?&gt;&gt; cachedWrapperClasses;</span><br></pre></td></tr></table></figure>
-<p>由上面源码可以明确的分为Class缓存，实例缓存。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addExtension</span><span class="params">(String name, Class&lt;?&gt; clazz)</span> </span>&#123;</span><br><span class="line">  	<span class="comment">// 1. 加载Class</span></span><br><span class="line">    getExtensionClasses(); <span class="comment">// load classes</span></span><br><span class="line">		<span class="comment">// 2. Class 判断</span></span><br><span class="line">    <span class="keyword">if</span> (!type.isAssignableFrom(clazz)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" doesn't implement the Extension "</span> + type);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (clazz.isInterface()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Input type "</span> +</span><br><span class="line">                clazz + <span class="string">" can't be interface!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!clazz.isAnnotationPresent(Adaptive.class)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.isBlank(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name is blank (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// Class 缓存中是否已经有该Class类</span></span><br><span class="line">        <span class="keyword">if</span> (cachedClasses.get().containsKey(name)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Extension name "</span> +</span><br><span class="line">                    name + <span class="string">" already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">				<span class="comment">// 将要加载的扩展类的名字进行保存（即使扩展类获取不到，也可以知道是哪个扩展类没有获取到）</span></span><br><span class="line">        cachedNames.put(clazz, name);</span><br><span class="line">      	<span class="comment">// 将Class文件存入缓存</span></span><br><span class="line">        cachedClasses.get().put(name, clazz);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (cachedAdaptiveClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Adaptive Extension already exists (Extension "</span> + type + <span class="string">")!"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cachedAdaptiveClass = clazz;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 加载Class</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; getExtensionClasses() &#123;</span><br><span class="line">  			<span class="comment">// 1.1 从Class缓存中获取Class</span></span><br><span class="line">        Map&lt;String, Class&lt;?&gt;&gt; classes = cachedClasses.get();</span><br><span class="line">  			<span class="comment">// 1.2 Class 不存在</span></span><br><span class="line">        <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (cachedClasses) &#123;</span><br><span class="line">              	<span class="comment">// 防止重复获取</span></span><br><span class="line">                classes = cachedClasses.get();</span><br><span class="line">                <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">                  	<span class="comment">// 1.3 从配置中加载Class类</span></span><br><span class="line">                    classes = loadExtensionClasses();</span><br><span class="line">                  	<span class="comment">// 1.4 缓存中保存Class类</span></span><br><span class="line">                    cachedClasses.set(classes);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">  			<span class="comment">// 1.5 返回Class类</span></span><br><span class="line">        <span class="keyword">return</span> classes;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<ol>
-<li><p>Class缓存优先从缓存中读取，如果缓存中不存在，则加载配置文件，根据配置把Class缓存到内存中，但并不会全部初始化，会按需初始化。</p>
-</li>
-<li><p>实例缓存每次获取的时候，会先从缓存中获取，如果缓存中读取不到，则重新加载缓存起来。</p>
-</li>
-</ol>
-<p>而Class缓存和实例缓存根据其特性又可以分为普通扩展类、包装扩展类、自适应扩展类、其他缓存。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在官方文档中两者的比较如下：</p>
-<ol>
-<li>JDK标准的SPI会一次性实例化扩展的所有实现，即使内有用上也会加载。</li>
-<li>如果加载失败，则连扩展的名称都获取不到。</li>
-<li>增加了对扩展IoC和AOP的支持，一个扩展可以直接setter注入其他扩展。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>dubbo</category>
-      </categories>
-      <tags>
-        <tag>SPI</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Redis事件机制</title>
-    <url>/2019/04/25/redisEvent1/</url>
-    <content><![CDATA[<blockquote>
-<p>Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。<a id="more"></a>  </p>
-</blockquote>
-<h3 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h3><p>Redis基于Reactor模式开发了自己的网络时间处理器：这个处理器被称为文件事件处理器。</p>
-<p>文件事件处理器使用I/O多路复用程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的时间处理器。</p>
-<p>当被监听的套接字准备好执行连结应答（accept）读取（read）写入（write）关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</p>
-<p><img src="/2019/04/25/redisEvent1/FileEvent.png" alt="&#39;文件事件处理器的四个组成部分&#39;"></p>
-<p>尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都放到一个队列里面，然后通过这个队列，以有序、同步、每次一个套接字的方式向文件事件分派器传送套接字。</p>
-<p>文件事件分派器接受I/O多路复用程序传来的套接字，并根据套接字产生的事件的类型，调用相应的事件处理器。</p>
-<h3 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h3><p>Redis的时间事件分为以下两类：</p>
-<p>定时事件：让一段程序在指定的时间之后执行一次。<br>周期事件：让一段程序每隔指定时间就执行一次。</p>
-<p>服务器将所有时间事件都放在一个无序链表中，每当时间事件执行器运行时，它就遍历整个链表，查找所有已到达的时间事件，并调用相应的事件处理器。</p>
-<p><img src="/2019/04/25/redisEvent1/Event.png" alt="事件处理角度下的服务器运行流程"></p>
-<p>时间事件的运用实例：serverCron函数，它的主要工作包括：</p>
-<ol>
-<li>更新服务器的各类统计信息，比如：时间、内存占用、数据库占用情况等。</li>
-<li>清理数据库中的过期键值对。</li>
-<li>关闭清理连接失效的客户端。</li>
-<li>尝试进行AOF或RDB之久化操作。</li>
-<li>如果服务器是主服务器，对从服务器进行定期同步。</li>
-<li>如果处于集群模式，对集群进行定期同步和连接测试。</li>
-</ol>
-<p>文件事件和时间事件是合作关系，服务器会轮流处理这两种事件，并且处理事件的过程中不会进行抢占。</p>
-]]></content>
-      <tags>
-        <tag>Redis Event</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java内存模型小记01</title>
-    <url>/2021/09/13/20210913/</url>
-    <content><![CDATA[<blockquote>
-<p>今天和老大聊JVM内存模型，一开口，老大就指出我把JVM内存模型和Java虚拟机运行时数据区搞反了，在网上翻了很多博客，发现都搞反了，翻了<a href="http://www.cs.umd.edu/~pugh/java/memoryModel/jsr133.pdf" target="_blank" rel="noopener"> JSR-133: Java Memory Model and Thread Specification </a>和《深入JVM虚拟机》才了解具体的定义。<a id="more"></a></p>
-</blockquote>
-<h1 id="内存模型概念"><a href="#内存模型概念" class="headerlink" title="内存模型概念"></a>内存模型概念</h1><p>Java内存模型的主要目标是定义程序中各个变量的访问规则。即在虚拟机中将变量存储到内存和从内存中取出变量这样的底层细节。</p>
-<p><img src="/2021/09/13/20210913/memoryModel.png" alt="交互关系"></p>
-<p>主内存：存储Java所有的变量</p>
-<p>工作内存：每条线程都有自己的工作内存，其中保留了被该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作（读取和赋值等）都必须在工作内存中进行，而不能直接读写主内存中的变量。 </p>
-<p>不同的线程之间无法直接访问对方的工作内存中的变量，线程间变量值的传递均需要通过主内存来完成。</p>
-<p>#内存间如何交互</p>
-<p><img src="/2021/09/13/20210913/memory02.png" alt="内存交互"></p>
-<p>程序需要对主内存中的testA=1变量进行访问时，如果为了保证并发修改问题：</p>
-<ol>
-<li><p>先对主内存中的testA=1进行lock加锁。（lock）</p>
-</li>
-<li><p>读取主内存中的变量testA并将其传输到线程的工作内存中。（read）</p>
-</li>
-<li><p>把从主内存得到的testA变量放入工作内存的变量副本中。（load）</p>
-</li>
-<li><p>当有执行引擎需要这个值时，将工作内存中的testA变量传递给调用者。（use）</p>
-</li>
-<li><p>执行引擎对testA=1重新赋值为testA=2。（assign）</p>
-</li>
-<li>如果对工作内存中的变量重新复制操作（assign），必须将工作内存的testA=2同步到write。如果没有发生任何assign操作，则不允许进行同步操作。（store）</li>
-<li>将同步到主内存的testA=2写入到主内存的变量testA中。</li>
-<li>在执行unlock操作前，必须把变量同步写入到主内存中。unlock和lock的执行次数一致。</li>
-</ol>
-<p>对于大部分的数据并发竞争问题适用（synchronized），但是volatile有自己的特殊规则。</p>
-<p>#特殊规则- volatile变量</p>
-<p>当一个变量定于为volatile，它将具备两种特性：</p>
-<ol>
-<li><p>保证此变量对所有线程可见性。</p>
-<p>在各个线程的工作内存中，volatile变量也可以存在不一致的情况，但由于每次使用之前都要刷新，执行引擎看不到不一致的情况，因此可以任务不存在一致性问题。但是Java里面的运算并非原子操作，导致volatile变量的运算在并发下一样时不安全的。</p>
-<p>由于volatile变量只能保证可见性，在不符合以下的两条规则的运算场景下，可以通过加锁（synchronize/原子类）来保证并发性。</p>
-<p>I    运算结果并不依赖变量的当前值，或者能够确保只有单一的线程修改变量的值。</p>
-<p>II   变量不需要与其他的状态变量共同参与不变约束。</p>
-</li>
-<li><p>禁止指令重排序优化，普通的变量仅仅会保证在该方法的执行过程中所有依赖赋值结果的都能获取到正确的结果，而不能保证变量赋值时操作的顺序与程序代码中的执行顺序一致。</p>
-<p>在写操作插入许多内存屏障来保证处理器不发生乱序执行。</p>
-</li>
-</ol>
-<p>#内存模型解决了什么问题</p>
-<p>Java的内存模型保证在并发过程中处理问题的原子性、可见性、有序性。</p>
-<p>原子性：Lock/unlock，synchronize的monitorenter/monitorexit满足原子性的需求。</p>
-<p>可见性：volatile/synchronize/final保证了可见性。</p>
-<p>有序性：</p>
-<ol>
-<li>volatile的禁止指令重排序语义。</li>
-<li>synchronize的一个变量在同一时刻只允许一条线程对其进行lock操作。</li>
-<li>先行发生原则。</li>
-</ol>
-]]></content>
-      <tags>
-        <tag>JVM</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>JVM垃圾收集（一）</title>
-    <url>/2018/04/29/gc01/</url>
-    <content><![CDATA[<blockquote>
-<p>&emsp;&emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）<a id="more"></a>  </p>
-</blockquote>
-<h5 id="如何判断对象存活"><a href="#如何判断对象存活" class="headerlink" title="如何判断对象存活"></a>如何判断对象存活</h5><table>
-<thead>
-<tr>
-<th style="text-align:center">算法</th>
-<th style="text-align:center">思想</th>
-<th style="text-align:center">优缺点</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">引用计数算法</td>
-<td style="text-align:center">给对象一个计数器，有人引用就加1,引用失效就减1。当计数器为0时，则对象不再被引用。</td>
-<td style="text-align:center">优点：实现简单，判定效率高。缺点：很难解决对象之间相互循环调用的问题</td>
-</tr>
-<tr>
-<td style="text-align:center">可达性分析算法</td>
-<td style="text-align:center">以GC Roots为起点，当一个对象没有以GC Roots为起点的引用链时，则对象不再被引用</td>
-<td style="text-align:center"></td>
-</tr>
-</tbody>
-</table>
-<p>在jdk中引用分为强引用、软引用、弱引用、虚引用。  </p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">强引用</th>
-<th style="text-align:center">软引用</th>
-<th style="text-align:center">弱引用</th>
-<th style="text-align:center">虚引用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">强引用只要存在，就不会被回收</td>
-<td style="text-align:center">在系统将要发生内存溢出时，对象将进入二次垃圾回收范围</td>
-<td style="text-align:center">只能生存到下一次垃圾回收之前</td>
-<td style="text-align:center">惟一的目的就是能在这个对像被收集器回收时收到一个系统的通知</td>
-</tr>
-</tbody>
-</table>
-<h5 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h5><blockquote>
-<p>&emsp;&emsp;在JVM中，可以把堆分为1/3的新生代和2/3的老生代。在将新生代按照8:2分为Eden区和Survivor区。而在Survivor区有按照1:1分为两个，记为from，to区。(各参数依据默认参数)<br><img src="/2018/04/29/gc01/heap.png" alt="&#39;堆的内存结构&#39;"><br>在新创建一个对象时，首先要对一个对象进行判断，是大对象还是一般的对象（需要占用连续的内存空间：如较长的字符串数组）。如果是大对象就会直接进入老年代，否则一般的对象都会进入Eden区。如下图所示：<br><img src="/2018/04/29/gc01/newObj.png" alt="&#39;对象建立的过程&#39;"><br>而对于垃圾收集器的选择具体如下图所示：<br><img src="/2018/04/29/gc01/gccollector.png" alt="&#39;垃圾收集器的组合&#39;"><br>我们需要针对不同的场合选择垃圾收集器。  </p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">Serial</th>
-<th style="text-align:center">ParNew</th>
-<th style="text-align:center">Parallel Scavenge</th>
-<th style="text-align:center">Serial Old</th>
-<th style="text-align:center">Parallel Old</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">单线程的收集器，只会使用一个CPU或一条收集器去完成垃圾收集工作，并在在它进行垃圾收集时，必须暂停其他所有工作的线程</td>
-<td style="text-align:center">Serial收集器的多线程版本，也同样要暂停其他工作线程。只有它能与CMS收集器配合。</td>
-<td style="text-align:center">CMS等收集器注重缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge是达到一个可控制的吞吐量。主要适合在后台运算而不需要太多交互的任务</td>
-<td style="text-align:center">单线程收集器，使用标记-整理算法。主要用来和JDK1.5及以前的版本中与Parallel Scavenge配合使用和作为CMS收集器的后备预案，在并发收集器发生Concurrent Mode Failure时使用</td>
-<td style="text-align:center">使用了多线程和标记-整理算法，在注重吞吐量以及CPU资源敏感的场合优先考虑Parallel Scavenge和Parallel Old收集器</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>CMS(Currernt Mark Sweep)<br>CMS收集器采用“标记-清除”算法，从而达到以获取最短回收停顿时间的目标。它分为4个步骤：  <ul>
-<li>初始标记<br>标记GC Roots能直接关联到的对象，速度很快。</li>
-<li>并发标记<br>进行GC Roots Tracing的过程。</li>
-<li>重新标记<br>为了修正并发标记时间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，</li>
-<li>并发清除<br>并发清除GC Roots不可达的对象。<br>优点：并发收集，低停顿。<br>缺点：1、CMS收集线对CPU资源非常敏感。<br>&emsp;&emsp;&emsp;2、CMS收集器无法处理浮动的垃圾，可能出现“Concurrent Mode Failure”失败而导致另一次Full GC的产生。当出现Concurrent Mode Failure失败时，虚拟机将启动后备预案：临时启用Serial Old收集器来重新进行老年代的垃圾收集，停顿的时间会加长。<br>&emsp;&emsp;&emsp;3、“标记-清除”会产生大量的空间碎片。</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>JVM</category>
-      </categories>
-      <tags>
-        <tag>CMS</tag>
-        <tag>Serial</tag>
-        <tag>ParNew</tag>
-        <tag>Parallel</tag>
-        <tag>Scavenge</tag>
-        <tag>Serial Old</tag>
-        <tag>Parallel Old</tag>
-        <tag>G1</tag>
       </tags>
   </entry>
   <entry>
@@ -546,6 +422,130 @@
       </categories>
       <tags>
         <tag>事务</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Redis事件机制</title>
+    <url>/2019/04/25/redisEvent1/</url>
+    <content><![CDATA[<blockquote>
+<p>Redis有两类事件：文件事件和时间事件，这两个事件组成了Redis的服务器的事件驱动程序。<a id="more"></a>  </p>
+</blockquote>
+<h3 id="文件事件"><a href="#文件事件" class="headerlink" title="文件事件"></a>文件事件</h3><p>Redis基于Reactor模式开发了自己的网络时间处理器：这个处理器被称为文件事件处理器。</p>
+<p>文件事件处理器使用I/O多路复用程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的时间处理器。</p>
+<p>当被监听的套接字准备好执行连结应答（accept）读取（read）写入（write）关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</p>
+<p><img src="/2019/04/25/redisEvent1/FileEvent.png" alt="&#39;文件事件处理器的四个组成部分&#39;"></p>
+<p>尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都放到一个队列里面，然后通过这个队列，以有序、同步、每次一个套接字的方式向文件事件分派器传送套接字。</p>
+<p>文件事件分派器接受I/O多路复用程序传来的套接字，并根据套接字产生的事件的类型，调用相应的事件处理器。</p>
+<h3 id="时间事件"><a href="#时间事件" class="headerlink" title="时间事件"></a>时间事件</h3><p>Redis的时间事件分为以下两类：</p>
+<p>定时事件：让一段程序在指定的时间之后执行一次。<br>周期事件：让一段程序每隔指定时间就执行一次。</p>
+<p>服务器将所有时间事件都放在一个无序链表中，每当时间事件执行器运行时，它就遍历整个链表，查找所有已到达的时间事件，并调用相应的事件处理器。</p>
+<p><img src="/2019/04/25/redisEvent1/Event.png" alt="事件处理角度下的服务器运行流程"></p>
+<p>时间事件的运用实例：serverCron函数，它的主要工作包括：</p>
+<ol>
+<li>更新服务器的各类统计信息，比如：时间、内存占用、数据库占用情况等。</li>
+<li>清理数据库中的过期键值对。</li>
+<li>关闭清理连接失效的客户端。</li>
+<li>尝试进行AOF或RDB之久化操作。</li>
+<li>如果服务器是主服务器，对从服务器进行定期同步。</li>
+<li>如果处于集群模式，对集群进行定期同步和连接测试。</li>
+</ol>
+<p>文件事件和时间事件是合作关系，服务器会轮流处理这两种事件，并且处理事件的过程中不会进行抢占。</p>
+]]></content>
+      <tags>
+        <tag>Redis Event</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>JVM垃圾收集（一）</title>
+    <url>/2018/04/29/gc01/</url>
+    <content><![CDATA[<blockquote>
+<p>&emsp;&emsp;在JVM中,进行垃圾回收首先要判断对象对象是否存活，在对不同生命周期的对象进行垃圾回收。在进行垃圾回收时，要根据需求进行垃圾回收算法的选择。（比如注重吞吐量）<a id="more"></a>  </p>
+</blockquote>
+<h5 id="如何判断对象存活"><a href="#如何判断对象存活" class="headerlink" title="如何判断对象存活"></a>如何判断对象存活</h5><table>
+<thead>
+<tr>
+<th style="text-align:center">算法</th>
+<th style="text-align:center">思想</th>
+<th style="text-align:center">优缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">引用计数算法</td>
+<td style="text-align:center">给对象一个计数器，有人引用就加1,引用失效就减1。当计数器为0时，则对象不再被引用。</td>
+<td style="text-align:center">优点：实现简单，判定效率高。缺点：很难解决对象之间相互循环调用的问题</td>
+</tr>
+<tr>
+<td style="text-align:center">可达性分析算法</td>
+<td style="text-align:center">以GC Roots为起点，当一个对象没有以GC Roots为起点的引用链时，则对象不再被引用</td>
+<td style="text-align:center"></td>
+</tr>
+</tbody>
+</table>
+<p>在jdk中引用分为强引用、软引用、弱引用、虚引用。  </p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">强引用</th>
+<th style="text-align:center">软引用</th>
+<th style="text-align:center">弱引用</th>
+<th style="text-align:center">虚引用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">强引用只要存在，就不会被回收</td>
+<td style="text-align:center">在系统将要发生内存溢出时，对象将进入二次垃圾回收范围</td>
+<td style="text-align:center">只能生存到下一次垃圾回收之前</td>
+<td style="text-align:center">惟一的目的就是能在这个对像被收集器回收时收到一个系统的通知</td>
+</tr>
+</tbody>
+</table>
+<h5 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h5><blockquote>
+<p>&emsp;&emsp;在JVM中，可以把堆分为1/3的新生代和2/3的老生代。在将新生代按照8:2分为Eden区和Survivor区。而在Survivor区有按照1:1分为两个，记为from，to区。(各参数依据默认参数)<br><img src="/2018/04/29/gc01/heap.png" alt="&#39;堆的内存结构&#39;"><br>在新创建一个对象时，首先要对一个对象进行判断，是大对象还是一般的对象（需要占用连续的内存空间：如较长的字符串数组）。如果是大对象就会直接进入老年代，否则一般的对象都会进入Eden区。如下图所示：<br><img src="/2018/04/29/gc01/newObj.png" alt="&#39;对象建立的过程&#39;"><br>而对于垃圾收集器的选择具体如下图所示：<br><img src="/2018/04/29/gc01/gccollector.png" alt="&#39;垃圾收集器的组合&#39;"><br>我们需要针对不同的场合选择垃圾收集器。  </p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Serial</th>
+<th style="text-align:center">ParNew</th>
+<th style="text-align:center">Parallel Scavenge</th>
+<th style="text-align:center">Serial Old</th>
+<th style="text-align:center">Parallel Old</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">单线程的收集器，只会使用一个CPU或一条收集器去完成垃圾收集工作，并在在它进行垃圾收集时，必须暂停其他所有工作的线程</td>
+<td style="text-align:center">Serial收集器的多线程版本，也同样要暂停其他工作线程。只有它能与CMS收集器配合。</td>
+<td style="text-align:center">CMS等收集器注重缩短垃圾收集时用户线程的停顿时间，而Parallel Scavenge是达到一个可控制的吞吐量。主要适合在后台运算而不需要太多交互的任务</td>
+<td style="text-align:center">单线程收集器，使用标记-整理算法。主要用来和JDK1.5及以前的版本中与Parallel Scavenge配合使用和作为CMS收集器的后备预案，在并发收集器发生Concurrent Mode Failure时使用</td>
+<td style="text-align:center">使用了多线程和标记-整理算法，在注重吞吐量以及CPU资源敏感的场合优先考虑Parallel Scavenge和Parallel Old收集器</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>CMS(Currernt Mark Sweep)<br>CMS收集器采用“标记-清除”算法，从而达到以获取最短回收停顿时间的目标。它分为4个步骤：  <ul>
+<li>初始标记<br>标记GC Roots能直接关联到的对象，速度很快。</li>
+<li>并发标记<br>进行GC Roots Tracing的过程。</li>
+<li>重新标记<br>为了修正并发标记时间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，</li>
+<li>并发清除<br>并发清除GC Roots不可达的对象。<br>优点：并发收集，低停顿。<br>缺点：1、CMS收集线对CPU资源非常敏感。<br>&emsp;&emsp;&emsp;2、CMS收集器无法处理浮动的垃圾，可能出现“Concurrent Mode Failure”失败而导致另一次Full GC的产生。当出现Concurrent Mode Failure失败时，虚拟机将启动后备预案：临时启用Serial Old收集器来重新进行老年代的垃圾收集，停顿的时间会加长。<br>&emsp;&emsp;&emsp;3、“标记-清除”会产生大量的空间碎片。</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>JVM</category>
+      </categories>
+      <tags>
+        <tag>CMS</tag>
+        <tag>Serial</tag>
+        <tag>ParNew</tag>
+        <tag>Parallel</tag>
+        <tag>Scavenge</tag>
+        <tag>Serial Old</tag>
+        <tag>Parallel Old</tag>
+        <tag>G1</tag>
       </tags>
   </entry>
   <entry>
@@ -719,6 +719,71 @@
       </tags>
   </entry>
   <entry>
+    <title>SpringBoot是如何进行自动配置的？</title>
+    <url>/2019/06/04/springboot01/</url>
+    <content><![CDATA[<blockquote>
+<p>平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。<a id="more"></a></p>
+</blockquote>
+<p>&emsp;&emsp;因为公司向对dubbo进行升级，解决dubbo优雅停机等bug问题，借着这个机会，升级改造项目使用SpringBoot。</p>
+<h4 id="常用注解"><a href="#常用注解" class="headerlink" title="常用注解"></a>常用注解</h4><table>
+<thead>
+<tr>
+<th>注解</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>@Value</td>
+<td>@Value 就相当于传统 xml 配置文件中的 value 字段。</td>
+</tr>
+<tr>
+<td>@ConfigurationProperties</td>
+<td>对标记有@ConfigurationProperties的类所有属性和配置文件中相关的配置项进行绑定。（默认从全局配置文件中获取配置值），绑定之后我们就可以通过这个类去访问全局配置文件中的属性值了。</td>
+</tr>
+<tr>
+<td>@Import</td>
+<td>@Import注解支持导入普通Java类，并将其声明成一个bean。主要用于将对各分散的java config配置类融合成一个更大的config类。</td>
+</tr>
+<tr>
+<td>@Conditional</td>
+<td>@Conditional注释可以实现只有在特定条件满足时才启用一些配置。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="SpringBoot自动配置原理"><a href="#SpringBoot自动配置原理" class="headerlink" title="SpringBoot自动配置原理"></a>SpringBoot自动配置原理</h4><p>&emsp;&emsp;SpringBoot的自动配置源头一切都要从@SpringBootApplication这个注解开始说起。</p>
+<p>@SpringBootApplication 标注在某个类上说明：</p>
+<ul>
+<li>这个类是 SpringBoot 的主配置类。</li>
+<li>SpringBoot 就应该运行这个类的 main 方法来启动 SpringBoot 应用。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@SpringBootConfiguration</span></span><br><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(excludeFilters = &#123; <span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),</span><br><span class="line">		<span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) &#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SpringBootApplication &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;通过源码可知，@SpringBootApplication是一个组合注解，由三个注解组成：</p>
+<p>@SpringBootConfiguration：该注解表示这是一个SpringBoot的配置类，其实就是一个Configuration注解而已。</p>
+<p>@EnableAutoConfiguration：开启自动配置。</p>
+<p>@ComponentScan：开启组件扫描。</p>
+<p>在查看下开启自动配置的的注解类：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@AutoConfigurationPackage</span></span><br><span class="line"><span class="meta">@Import</span>(AutoConfigurationImportSelector.class)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> EnableAutoConfiguration &#123;</span><br><span class="line"></span><br><span class="line">	String ENABLED_OVERRIDE_PROPERTY = <span class="string">"spring.boot.enableautoconfiguration"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration classes such that they will never be applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the classes to exclude</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	Class&lt;?&gt;[] exclude() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration class names such that they will never be</span></span><br><span class="line"><span class="comment">	 * applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the class names to exclude</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@since</span> 1.3.0</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	String[] excludeName() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>@EnableAutoConfiguration注解由@AutoConfigurationPackage和@Import两个注解组成。</p>
+<p>@AutoConfigurationPackage：由@Import(AutoConfigurationPackages.Registrar.class)可知，其注解主要是将主配置类（@SpringBootConfiguration标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器中。</p>
+<p>@Import自动导入了AutoConfigurationImportSelector.class配置类。</p>
+<p>&emsp;&emsp;通过AutoConfigurationImportSelector#selectImports方法返回需要导入的组件的全类名数组的。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> String[] selectImports(AnnotationMetadata annotationMetadata) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!isEnabled(annotationMetadata)) &#123;</span><br><span class="line">			<span class="keyword">return</span> NO_IMPORTS;</span><br><span class="line">		&#125;</span><br><span class="line">  <span class="comment">//1、加载META-INF/spring-autoconfigure-metadata.properties文件</span></span><br><span class="line">		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader</span><br><span class="line">				.loadMetadata(<span class="keyword">this</span>.beanClassLoader);</span><br><span class="line">		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,</span><br><span class="line">				annotationMetadata);</span><br><span class="line">  <span class="comment">//3. 将EnableAutoConfiguration的值封装在一个数组中返回。</span></span><br><span class="line">		<span class="keyword">return</span> StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>通过 getAutoConfigurationEntry() -&gt; getCandidateConfigurations() -&gt; loadFactoryNames()查找全类名。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> List&lt;String&gt; <span class="title">getCandidateConfigurations</span><span class="params">(AnnotationMetadata metadata, AnnotationAttributes attributes)</span> </span>&#123;</span><br><span class="line">		List&lt;String&gt; configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),</span><br><span class="line">				getBeanClassLoader());</span><br><span class="line">		Assert.notEmpty(configurations, <span class="string">"No auto configuration classes found in META-INF/spring.factories. If you "</span></span><br><span class="line">				+ <span class="string">"are using a custom packaging, make sure that file is correct."</span>);</span><br><span class="line">		<span class="keyword">return</span> configurations;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>在loadFactoryNames方法中，从当前项目的路径中获取所有MATA-INF/spring.factories文件中的信息。将获取到的信息封装为一个Map返回。在从map中通过传入的 EnableAutoConfiguration.class参数，获取该key下的所有值。</p>
+<p>对获取的AutoConfigurationEntry进行过滤，过滤的依据是条件匹配。通过org.springframework.boot.autoconfigure.AutoConfigurationImportFilter过滤器进行过滤，分为configurations，exclusions两个集合。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> AutoConfigurationEntry <span class="title">getAutoConfigurationEntry</span><span class="params">(AutoConfigurationMetadata autoConfigurationMetadata,</span></span></span><br><span class="line"><span class="function"><span class="params">			AnnotationMetadata annotationMetadata)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (!isEnabled(annotationMetadata)) &#123;</span><br><span class="line">			<span class="keyword">return</span> EMPTY_ENTRY;</span><br><span class="line">		&#125;</span><br><span class="line">		AnnotationAttributes attributes = getAttributes(annotationMetadata);</span><br><span class="line">		List&lt;String&gt; configurations = getCandidateConfigurations(annotationMetadata, attributes);</span><br><span class="line">		configurations = removeDuplicates(configurations);</span><br><span class="line">		Set&lt;String&gt; exclusions = getExclusions(annotationMetadata, attributes);</span><br><span class="line">		checkExcludedClasses(configurations, exclusions);</span><br><span class="line">		configurations.removeAll(exclusions);</span><br><span class="line">		configurations = filter(configurations, autoConfigurationMetadata);</span><br><span class="line">		fireAutoConfigurationImportEvents(configurations, exclusions);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> AutoConfigurationEntry(configurations, exclusions);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>&emsp;&emsp;SpringBoot的自动配置体现了约定大于配置的设计理念。将SpringBoot需要的jar在Spring.factories中配置。通过SPI的设计模式，在服务启动时，用ServiceLoader进行加载。</p>
+]]></content>
+      <categories>
+        <category>Spring</category>
+      </categories>
+      <tags>
+        <tag>SpringBoot 自动配置</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>线程池参数分析</title>
     <url>/2019/03/06/threadpool1/</url>
     <content><![CDATA[<blockquote>
@@ -815,71 +880,6 @@
 ]]></content>
       <tags>
         <tag>TCC</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SpringBoot是如何进行自动配置的？</title>
-    <url>/2019/06/04/springboot01/</url>
-    <content><![CDATA[<blockquote>
-<p>平时一直在使用SpringBoot，但是没有进入深入的了解，公司需要对原有的项目改造升级，借着这个机会了解下SpringBoot的自动加载机制。<a id="more"></a></p>
-</blockquote>
-<p>&emsp;&emsp;因为公司向对dubbo进行升级，解决dubbo优雅停机等bug问题，借着这个机会，升级改造项目使用SpringBoot。</p>
-<h4 id="常用注解"><a href="#常用注解" class="headerlink" title="常用注解"></a>常用注解</h4><table>
-<thead>
-<tr>
-<th>注解</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>@Value</td>
-<td>@Value 就相当于传统 xml 配置文件中的 value 字段。</td>
-</tr>
-<tr>
-<td>@ConfigurationProperties</td>
-<td>对标记有@ConfigurationProperties的类所有属性和配置文件中相关的配置项进行绑定。（默认从全局配置文件中获取配置值），绑定之后我们就可以通过这个类去访问全局配置文件中的属性值了。</td>
-</tr>
-<tr>
-<td>@Import</td>
-<td>@Import注解支持导入普通Java类，并将其声明成一个bean。主要用于将对各分散的java config配置类融合成一个更大的config类。</td>
-</tr>
-<tr>
-<td>@Conditional</td>
-<td>@Conditional注释可以实现只有在特定条件满足时才启用一些配置。</td>
-</tr>
-</tbody>
-</table>
-<h4 id="SpringBoot自动配置原理"><a href="#SpringBoot自动配置原理" class="headerlink" title="SpringBoot自动配置原理"></a>SpringBoot自动配置原理</h4><p>&emsp;&emsp;SpringBoot的自动配置源头一切都要从@SpringBootApplication这个注解开始说起。</p>
-<p>@SpringBootApplication 标注在某个类上说明：</p>
-<ul>
-<li>这个类是 SpringBoot 的主配置类。</li>
-<li>SpringBoot 就应该运行这个类的 main 方法来启动 SpringBoot 应用。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@SpringBootConfiguration</span></span><br><span class="line"><span class="meta">@EnableAutoConfiguration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(excludeFilters = &#123; <span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),</span><br><span class="line">		<span class="meta">@Filter</span>(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) &#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SpringBootApplication &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>&emsp;&emsp;通过源码可知，@SpringBootApplication是一个组合注解，由三个注解组成：</p>
-<p>@SpringBootConfiguration：该注解表示这是一个SpringBoot的配置类，其实就是一个Configuration注解而已。</p>
-<p>@EnableAutoConfiguration：开启自动配置。</p>
-<p>@ComponentScan：开启组件扫描。</p>
-<p>在查看下开启自动配置的的注解类：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Inherited</span></span><br><span class="line"><span class="meta">@AutoConfigurationPackage</span></span><br><span class="line"><span class="meta">@Import</span>(AutoConfigurationImportSelector.class)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> EnableAutoConfiguration &#123;</span><br><span class="line"></span><br><span class="line">	String ENABLED_OVERRIDE_PROPERTY = <span class="string">"spring.boot.enableautoconfiguration"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration classes such that they will never be applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the classes to exclude</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	Class&lt;?&gt;[] exclude() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Exclude specific auto-configuration class names such that they will never be</span></span><br><span class="line"><span class="comment">	 * applied.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the class names to exclude</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@since</span> 1.3.0</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	String[] excludeName() <span class="keyword">default</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>@EnableAutoConfiguration注解由@AutoConfigurationPackage和@Import两个注解组成。</p>
-<p>@AutoConfigurationPackage：由@Import(AutoConfigurationPackages.Registrar.class)可知，其注解主要是将主配置类（@SpringBootConfiguration标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器中。</p>
-<p>@Import自动导入了AutoConfigurationImportSelector.class配置类。</p>
-<p>&emsp;&emsp;通过AutoConfigurationImportSelector#selectImports方法返回需要导入的组件的全类名数组的。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> String[] selectImports(AnnotationMetadata annotationMetadata) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!isEnabled(annotationMetadata)) &#123;</span><br><span class="line">			<span class="keyword">return</span> NO_IMPORTS;</span><br><span class="line">		&#125;</span><br><span class="line">  <span class="comment">//1、加载META-INF/spring-autoconfigure-metadata.properties文件</span></span><br><span class="line">		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader</span><br><span class="line">				.loadMetadata(<span class="keyword">this</span>.beanClassLoader);</span><br><span class="line">		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,</span><br><span class="line">				annotationMetadata);</span><br><span class="line">  <span class="comment">//3. 将EnableAutoConfiguration的值封装在一个数组中返回。</span></span><br><span class="line">		<span class="keyword">return</span> StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>通过 getAutoConfigurationEntry() -&gt; getCandidateConfigurations() -&gt; loadFactoryNames()查找全类名。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> List&lt;String&gt; <span class="title">getCandidateConfigurations</span><span class="params">(AnnotationMetadata metadata, AnnotationAttributes attributes)</span> </span>&#123;</span><br><span class="line">		List&lt;String&gt; configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),</span><br><span class="line">				getBeanClassLoader());</span><br><span class="line">		Assert.notEmpty(configurations, <span class="string">"No auto configuration classes found in META-INF/spring.factories. If you "</span></span><br><span class="line">				+ <span class="string">"are using a custom packaging, make sure that file is correct."</span>);</span><br><span class="line">		<span class="keyword">return</span> configurations;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<p>在loadFactoryNames方法中，从当前项目的路径中获取所有MATA-INF/spring.factories文件中的信息。将获取到的信息封装为一个Map返回。在从map中通过传入的 EnableAutoConfiguration.class参数，获取该key下的所有值。</p>
-<p>对获取的AutoConfigurationEntry进行过滤，过滤的依据是条件匹配。通过org.springframework.boot.autoconfigure.AutoConfigurationImportFilter过滤器进行过滤，分为configurations，exclusions两个集合。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> AutoConfigurationEntry <span class="title">getAutoConfigurationEntry</span><span class="params">(AutoConfigurationMetadata autoConfigurationMetadata,</span></span></span><br><span class="line"><span class="function"><span class="params">			AnnotationMetadata annotationMetadata)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (!isEnabled(annotationMetadata)) &#123;</span><br><span class="line">			<span class="keyword">return</span> EMPTY_ENTRY;</span><br><span class="line">		&#125;</span><br><span class="line">		AnnotationAttributes attributes = getAttributes(annotationMetadata);</span><br><span class="line">		List&lt;String&gt; configurations = getCandidateConfigurations(annotationMetadata, attributes);</span><br><span class="line">		configurations = removeDuplicates(configurations);</span><br><span class="line">		Set&lt;String&gt; exclusions = getExclusions(annotationMetadata, attributes);</span><br><span class="line">		checkExcludedClasses(configurations, exclusions);</span><br><span class="line">		configurations.removeAll(exclusions);</span><br><span class="line">		configurations = filter(configurations, autoConfigurationMetadata);</span><br><span class="line">		fireAutoConfigurationImportEvents(configurations, exclusions);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> AutoConfigurationEntry(configurations, exclusions);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>&emsp;&emsp;SpringBoot的自动配置体现了约定大于配置的设计理念。将SpringBoot需要的jar在Spring.factories中配置。通过SPI的设计模式，在服务启动时，用ServiceLoader进行加载。</p>
-]]></content>
-      <categories>
-        <category>Spring</category>
-      </categories>
-      <tags>
-        <tag>SpringBoot 自动配置</tag>
       </tags>
   </entry>
 </search>
