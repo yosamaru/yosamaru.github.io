@@ -20,20 +20,20 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
-<meta name="keywords" content="线程池参数">
+  <meta name="description" content="2021年已悄然过去，在周一到周三在周五的无限循环中飞逝，哎，这都是我的青春啊！">
+<meta name="keywords" content="胡言乱语">
 <meta property="og:type" content="article">
-<meta property="og:title" content="线程池参数分析">
-<meta property="og:url" content="http://yoursite.com/2019/03/06/threadpool1/index.html">
+<meta property="og:title" content="回看2021">
+<meta property="og:url" content="http://yoursite.com/2022/01/15/20220115/index.html">
 <meta property="og:site_name" content="Richard">
-<meta property="og:description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
+<meta property="og:description" content="2021年已悄然过去，在周一到周三在周五的无限循环中飞逝，哎，这都是我的青春啊！">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-05-10T11:36:12.066Z">
+<meta property="og:updated_time" content="2022-01-15T08:34:13.311Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="线程池参数分析">
-<meta name="twitter:description" content="一直在使用线程池创建线程，但是线程池的参数有什么用呢？">
+<meta name="twitter:title" content="回看2021">
+<meta name="twitter:description" content="2021年已悄然过去，在周一到周三在周五的无限循环中飞逝，哎，这都是我的青春啊！">
 
-<link rel="canonical" href="http://yoursite.com/2019/03/06/threadpool1/">
+<link rel="canonical" href="http://yoursite.com/2022/01/15/20220115/">
 
 
 <script id="page-configurations">
@@ -46,7 +46,7 @@
   };
 </script>
 
-  <title>线程池参数分析 | Richard</title>
+  <title>回看2021 | Richard</title>
   
 
 
@@ -190,7 +190,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/06/threadpool1/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/01/15/20220115/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/me.png">
@@ -203,7 +203,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          线程池参数分析
+          回看2021
         </h1>
 
         <div class="post-meta">
@@ -212,23 +212,17 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2019-03-06 07:51:52" itemprop="dateCreated datePublished" datetime="2019-03-06T07:51:52+08:00">2019-03-06</time>
+              <time title="Created: 2022-01-15 15:21:28 / Modified: 16:34:13" itemprop="dateCreated datePublished" datetime="2022-01-15T15:21:28+08:00">2022-01-15</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-05-10 19:36:12" itemprop="dateModified" datetime="2020-05-10T19:36:12+08:00">2020-05-10</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/线程池/" itemprop="url" rel="index"><span itemprop="name">线程池</span></a>
+                  <a href="/categories/总结/" itemprop="url" rel="index"><span itemprop="name">总结</span></a>
                 </span>
             </span>
 
@@ -244,19 +238,59 @@
 
       
         <blockquote>
-<p>一直在使用线程池创建线程，但是线程池的参数有什么用呢？<a id="more"></a></p>
+<p>2021年已悄然过去，在周一到周三在周五的无限循环中飞逝，哎，这都是我的青春啊！<a id="more"></a></p>
 </blockquote>
-<h4 id="参数概念"><a href="#参数概念" class="headerlink" title="参数概念"></a>参数概念</h4><ol>
-<li>corePoolSize：线程池中一直存活者的线程的最小数量。</li>
-<li>maximumPoolSize：线程池内能够容纳线程数量的最大值，但是如果提供的阻塞队列（也就是参数workQueue）是一个无界队列，那么提供的maximumPoolSize的数值将毫无意义。</li>
-<li>keepAliveTime：空闲线程处于等待状态的超时时间。如果执行的任务相对较多，并且每个任务执行的时间比较短，那么可以为该参数设置一个相对较大的数值，以提高线程的利用率。如果执行的任务相对较少，线程池使用率相对较低，那么可以先将参数设置为一个较小的数值，通过超时停止的机制来降低系统线程资源的开销，后续如果发现线程池的使用率逐渐增高以后，线程池会根据当前调教的任务数自动创建新的线程，当然，也可以手动调用setKeepAliveTime（long， TimeUnit)方法来重新设定keepAliveTime字段的值。</li>
-<li>workQueue：workQueue是一个内部元素为Runable(各种任务，通常是异步任务)的阻塞队列。阻塞队列是一种类似于“生产者-消费者”模型的队列。当队列已满时如果继续向队列中插入元素，该插入操作将被阻塞一直处于等待状态，知道队列中有元素被移除产生空位子后，才有可能执行这次插入操作；当队列为空时，如果继续执行元素的删除或获取操作，该操作同样会被阻塞而进入等待状态，直到队列中又有了该元素后，才能执行该操作。</li>
+<p>每年在年末的时候，我都会回想下年初的宏愿，拯救星河、拯救全人类，但是从来没有记录过，今年就想换个方式去做这件事…..</p>
+<h2 id="回首2021年初"><a href="#回首2021年初" class="headerlink" title="回首2021年初"></a>回首2021年初</h2><ol>
+<li><p>MySQL知识了解。</p>
+</li>
+<li><p>学习外语。</p>
+</li>
+<li><p>Dubbo框架知识整理。</p>
+</li>
+<li><p>读RocketMQ源码。</p>
+<p>……</p>
+</li>
 </ol>
-<h4 id="线程池操作"><a href="#线程池操作" class="headerlink" title="线程池操作"></a>线程池操作</h4><ol>
-<li>如果线程池中正在运行的线程数少于核心线程数，那么线程池总是倾向于创建一个新线程来执行该任务，而不是将该任务提交到该队列workQueue中进行等待。</li>
-<li>如果线程池中正在运行的线程数不少于核心线程数，那么线程池总是倾向于将该任务提交到队列workQueue中先让其等待，而不是创建一个新线程来执行该任务。</li>
-<li>如果线程池中正在运行的线程数不少于核心线程数，并且线程池中的阻塞队列也满了使得该任务入队失败，那么线程池会去判断当前池子中运行的线程数是否已经等于了该线程池允许运行的最大线程数maximumPoolSize，如果发现已经等于了，说明线程池已满，无法在继续创建新的线程了，那么就会拒绝执行该任务。如果发现运行的线程数小于池子允许的最大线程数，那么就会创建一个线程（创建的线程是非核心线程）来执行该任务。</li>
+<p>其实，现在回看2021的目标反而没有完成几件，自我驱动型不够、目标太大没有细化…</p>
+<h2 id="2021年做的事情"><a href="#2021年做的事情" class="headerlink" title="2021年做的事情"></a>2021年做的事情</h2><ol>
+<li><p>基金知识的了解，能够轻松应对业务开发。</p>
+</li>
+<li><p>Dubbo框架源码的了解，让我学会了很多设计模式，应用在代码编写上。（这个让我很开心….）</p>
+</li>
+<li><p>Redis的使用有自己的认识。会常规运用Redis，排查Redis的部分问题，对Redis的持久化和高可用有部分研究。（我也不知道后续需要如何去提升，在开发中我好像也很难接触到….）</p>
+</li>
+<li>RocketMQ仅仅只是会用，会排查小问题。距离我的期望还有很长很长的路。</li>
+<li>在今年我对JVM知识重新做了梳理，对JVM的内存有了新的认识。现在简历该可以写上了解JVM了，😂。</li>
+<li>对JVM的基础类框架在后半年时间，重新进行梳理，但是距离目标依旧很远。</li>
+<li>在做业务开发时，发现自己有时方式不正确，在2021年，写了太多的Bug，也让我成长快速，感谢公司给我的机会/给我的平台。</li>
+<li>重提MySQL，今年《MYSQL高性能》只看了一半，发现自己还是小白，已经错过了一年的规划，我想我在今年应该不会在错过了。</li>
+<li>在开发的时间做了一段时间的管理，发现自己的管理天赋差强人意啊，以后要怎么去做呢？</li>
 </ol>
+<p>2021年买了很多书，发现还有一大部分没有看完，所以2022我不想再继续买书了，努力把买了的书看完….</p>
+<p>有时觉得自己很奇怪，做了很多的计划但有很多没有完成，但是依旧在坚持做计划…所以我今年依旧会做计划，希望自己2022年能做完吧。</p>
+<h2 id="2022年的计划"><a href="#2022年的计划" class="headerlink" title="2022年的计划"></a>2022年的计划</h2><p>每天都做计划，但是好像每年都没有完成。哎，我要狠狠的教训我一顿，今年晚上吃个大餐，撑死自己得了….</p>
+<p>因为以往每年的计划完成的都不是很好，所以我今年的计划做的尽可能详细…..</p>
+<p>目前，摆在我面前的问题我觉的有这几个….<br>        MySQL、RocketMQ、JVM基础知识（包含JVM+JVM的基础类）、Spring框架、MyBaits框架……</p>
+<p>好像自己不会的太多了，还是少些点，免的明年做总结的时候，又要吃好吃的把自己撑死来惩罚自己，太费钱了…</p>
+<h3 id="2022-MySQL"><a href="#2022-MySQL" class="headerlink" title="2022::MySQL"></a>2022::MySQL</h3><p>感觉MySQL我看了很多年，但是依旧学不好….</p>
+<p>今年，《MySQL高性能》至少看两遍，知道自己能够画出脑图，有自己的知识体系为止，本来想着能够默写的画出脑图，但是想了下，大体的结构能默写画出，比较少用的细节能够翻书查阅，对于使用较多的知识结点要有自己的认识，不要通过翻书查阅才能想起来….</p>
+<ol>
+<li>书籍先看完一遍。对照书籍画出逻辑思维图。</li>
+<li>对着逻辑思维图，看看自己能对那些模块掌握不够 ，然后加深阅读。</li>
+<li>在画脑图，在看书….知道自己理解为止…</li>
+</ol>
+<h3 id="2022-RocketMQ"><a href="#2022-RocketMQ" class="headerlink" title="2022::RocketMQ"></a>2022::RocketMQ</h3><p>今年的目标很简单，就是把RocketMQ的重点部分的源码梳理一遍….</p>
+<p>发送消息/消息存储/集群管理/….</p>
+<h3 id="2022-JVM"><a href="#2022-JVM" class="headerlink" title="2022::JVM"></a>2022::JVM</h3><p>JVM的基础知识其实我也看了很多遍，但是忘的太快…..</p>
+<p>JVM的常规基础知识在整理一遍</p>
+<p>对JVM通用的基础类进行梳理。例如AQS/锁/Map/….</p>
+<h3 id="2022-Spring框架"><a href="#2022-Spring框架" class="headerlink" title="2022::Spring框架"></a>2022::Spring框架</h3><p>了解Spring框架的基础源码，知道原理。</p>
+<h3 id="2022-看完自己没有看完的书"><a href="#2022-看完自己没有看完的书" class="headerlink" title="2022::看完自己没有看完的书"></a>2022::看完自己没有看完的书</h3><p>2021买了很多书，但是很多没有看完，力争今年看完。</p>
+<h3 id="2022-对基金的行业知识要有更充分的认知"><a href="#2022-对基金的行业知识要有更充分的认知" class="headerlink" title="2022:: 对基金的行业知识要有更充分的认知"></a>2022:: 对基金的行业知识要有更充分的认知</h3><p>干一行，就要爱一行。所以今年要对基金知识有更充分的认识，拿到基金从业资格证是必须的。</p>
+<h2 id="结语送给2022"><a href="#结语送给2022" class="headerlink" title="结语送给2022"></a>结语送给2022</h2><p>不知道谁说的，记不清了，但是大意是说计划虽赶不上变化，但是有计划，可以让你不致于偏离航线太远….</p>
+<p>2022加油，希望在2022年年末有一个好的结果….</p>
+<p>加油，2022！努力才不负流逝的青春…..</p>
 
     </div>
 
@@ -266,7 +300,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/线程池参数/" rel="tag"># 线程池参数</a>
+              <a href="/tags/胡言乱语/" rel="tag"># 胡言乱语</a>
           </div>
 
         
@@ -275,13 +309,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2018/12/01/rocketmq2/" rel="prev" title="RocketMQ事务消息知悉">
-      <i class="fa fa-chevron-left"></i> RocketMQ事务消息知悉
+    <a href="/2022/01/07/20220107/" rel="prev" title="AQS源码解析">
+      <i class="fa fa-chevron-left"></i> AQS源码解析
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2019/04/25/redisEvent1/" rel="next" title="Redis事件机制">
-      Redis事件机制 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -340,7 +371,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#参数概念"><span class="nav-number">1.</span> <span class="nav-text">参数概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程池操作"><span class="nav-number">2.</span> <span class="nav-text">线程池操作</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#回首2021年初"><span class="nav-number">1.</span> <span class="nav-text">回首2021年初</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2021年做的事情"><span class="nav-number">2.</span> <span class="nav-text">2021年做的事情</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2022年的计划"><span class="nav-number">3.</span> <span class="nav-text">2022年的计划</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-MySQL"><span class="nav-number">3.1.</span> <span class="nav-text">2022::MySQL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-RocketMQ"><span class="nav-number">3.2.</span> <span class="nav-text">2022::RocketMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-JVM"><span class="nav-number">3.3.</span> <span class="nav-text">2022::JVM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-Spring框架"><span class="nav-number">3.4.</span> <span class="nav-text">2022::Spring框架</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-看完自己没有看完的书"><span class="nav-number">3.5.</span> <span class="nav-text">2022::看完自己没有看完的书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2022-对基金的行业知识要有更充分的认知"><span class="nav-number">3.6.</span> <span class="nav-text">2022:: 对基金的行业知识要有更充分的认知</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结语送给2022"><span class="nav-number">4.</span> <span class="nav-text">结语送给2022</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
