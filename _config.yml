@@ -93,7 +93,7 @@ theme: next
 ## Docs: https://hexo.io/docs/deployment.html
 deploy: 
   type: git
-  repo:	https://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@github.com/yosamaru/yosamaru.github.io.git
+  repo:	https://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@github.com/yosamaru/yosamaru.github.io.git
   branch: master
 
 search:
